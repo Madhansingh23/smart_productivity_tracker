@@ -2,6 +2,7 @@
 const express = require('express');
 const router = express.Router();
 const auth = require('../middleware/auth');
+const upload = require('../middleware/upload');
 const Task = require('../models/Task');
 const { scoreOnCompletion } = require('../utils/scoring');
 
@@ -33,6 +34,15 @@ router.put('/:id', auth, async (req, res) => {
     res.json(task);
   } catch(err){ console.error(err); res.status(500).json({ error: 'server error' }); }
 });
+
+// router.post('/:id/upload', upload.single('file'), async (req, res) => {
+//   const task = await Task.findById(req.params.id);
+//   if (!task) return res.status(404).send('Task not found');
+//   task.fileUrl = `/uploads/${req.file.filename}`;
+//   await task.save();
+//   res.json(task);
+// });
+
 
 router.delete('/:id', auth, async (req, res) => {
   try { await Task.deleteOne({ _id: req.params.id, userId: req.user._id }); res.json({ ok: true }); }

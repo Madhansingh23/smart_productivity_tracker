@@ -10,7 +10,7 @@ const taskSchema = new mongoose.Schema({
   remindAt: Date,
   estimatedMinutes: Number,
   actualMinutes: { type: Number, default: 0 },
-  status: { type: String, enum: ['todo','in-progress','done'], default: 'todo' },
+  status: { type: String, enum: ['created', 'in-progress', 'checking', 'completed'], default: 'created' },
   pointsAwarded: { type: Number, default: 0 },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }

@@ -1,47 +1,71 @@
+import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { useState, useEffect } from 'react';
-import { getProfile, uploadProfilePic } from '../services/api';
-import { useAuth } from '../context/AuthContext';
+import api from '../lib/api';
 
-export default function ProfilePage() {
+/**
+ * Profile page (view + update photo)
+ */
+export default function ProfilePage(){
   const { username } = useParams();
-  const { token, user, setUser } = useAuth();
-  const [profile, setProfile] = useState(null);
-  const [file, setFile] = useState(null);
+  const [user,setUser] = useState(null);
+  const [uploading,setUploading] = useState(false);
 
-  useEffect(() => {
-    getProfile(username).then(res => setProfile(res.data));
-  }, [username]);
-
-  const handleUpload = async () => {
-    if (!file) return;
-    const formData = new FormData();
-    formData.append('profilePic', file);
-    const res = await uploadProfilePic(formData, token);
-    setProfile(prev => ({ ...prev, profilePic: res.data.profilePic }));
-    if (user.username === username) {
-      setUser(prev => ({ ...prev, profilePic: res.data.profilePic }));
+  async function load(){
+    try{
+      const res = await api.get(`/profile/${username}`);
+      setUser(res.data);
+    }catch(e){
+      console.error(e);
     }
-  };
+  }
+  useEffect(()=>{ load(); }, [username]);
 
-  if (!profile) return <div>Loading...</div>;
+  async function onFile(e){
+    const file = e.target.files?.[0];
+    if(!file) return;
+    const form = new FormData();
+    form.append('profilePic', file);
+    setUploading(true);
+    try{
+      await api.post('/profile/upload-pic', form, {
+        headers: { 'Content-Type':'multipart/form-data' }
+      });
+      await load();
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  if(!user) return <div>Loading...</div>;
 
   return (
-    <div>
-      <h1>{profile.name}'s Profile</h1>
-      <img src={profile.profilePic} alt={profile.name} className="w-32 h-32 rounded-full" />
-      {user && user.username === username && (
-        <div>
-          <input type="file" onChange={e => setFile(e.target.files[0])} />
-          <button onClick={handleUpload} className="bg-blue-500 text-white px-4 py-1 rounded">
-            Update Picture
-          </button>
+    <div className="max-w-3xl mx-auto">
+      <div className="bg-white border rounded-xl p-5 shadow-sm">
+        <div className="flex gap-4 items-center">
+          <img src={user.profilePic || '/default-avatar.png'} alt={user.name} className="w-20 h-20 rounded-full object-cover" />
+          <div>
+            <div className="text-xl font-semibold">{user.name} <span className="text-gray-500">@{user.username}</span></div>
+            <div className="text-gray-600 text-sm">{user.bio || 'No bio yet.'}</div>
+          </div>
         </div>
-      )}
-      <p>Email: {profile.email}</p>
-      <p>Age: {profile.age}</p>
-      <p>Date of Birth: {profile.dateOfBirth?.slice(0, 10)}</p>
-      <p>About: {profile.selfDescription}</p>
+
+        <div className="grid sm:grid-cols-2 gap-4 mt-5">
+          <div className="bg-gray-50 rounded p-3">
+            <div className="text-xs text-gray-500">Age</div>
+            <div className="font-medium">{user.age || '-'}</div>
+          </div>
+          <div className="bg-gray-50 rounded p-3">
+            <div className="text-xs text-gray-500">Date of birth</div>
+            <div className="font-medium">{user.dob ? new Date(user.dob).toLocaleDateString() : '-'}</div>
+          </div>
+        </div>
+
+        <div className="mt-5">
+          <label className="block text-sm font-medium mb-2">Update profile picture</label>
+          <input type="file" accept="image/*" onChange={onFile} />
+          {uploading && <div className="text-sm text-gray-500 mt-1">Uploading...</div>}
+        </div>
+      </div>
     </div>
   );
 }

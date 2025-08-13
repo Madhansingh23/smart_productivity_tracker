@@ -18,3 +18,57 @@ const userSchema = new mongoose.Schema({
 });
 
 module.exports = mongoose.model('User', userSchema);
+
+// const mongoose=require('mongoose');
+// const userSchema=new mongoose.Schema({
+//   username:{
+//     type:String,
+//     required:true,
+//     unique:true,
+//     index:true,
+//   },
+//   email:{
+//     type:String,
+//     required:true,
+//     unique:true,
+//     index:true,
+//   },
+//   password:{
+//     type:String,
+//     default:'',
+//     required:true,
+//   },
+//   profilePic:{
+//     type:String,
+//     default:'',
+//   },
+//   age:{
+//     type:Number,
+//   },
+//   dob:{
+//     type:Date,
+//   },
+//   selfDescription:
+//   {
+//     type:String,
+//   },
+//   points:{
+//     type:String,
+//     default:0,
+//   },
+//   settings:{
+//     timeZone:{
+//       type:String,
+//       default:'UTC',
+//     },
+//     minDailyTasks:{
+//       type:Number,
+//       default:1,
+//     },
+//     notificationsEnabled:{
+//       type:Boolean,
+//       default:true,
+//     }
+//   },
+// });
+// module.exports=new mongoose.model('User',userSchema);

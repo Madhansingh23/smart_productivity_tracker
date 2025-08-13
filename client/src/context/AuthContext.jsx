@@ -9,3 +9,7 @@ export function AuthProvider({children}){
   return <AuthContext.Provider value={{token,setToken,user,setUser}}>{children}</AuthContext.Provider>;
 }
 export const useAuth = ()=> useContext(AuthContext);
+
+
+
+

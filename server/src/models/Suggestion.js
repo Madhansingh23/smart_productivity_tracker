@@ -10,3 +10,25 @@ const suggestionSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now }
 });
 module.exports = mongoose.model('Suggestion', suggestionSchema);
+
+// const mongoose=require('mongoose');
+// const suggestionSchema=new mongoose.Schema({
+//   userid:{
+//     type:mongoose.Schema.Types.ObjectId,
+//     ref:'User'
+//   },
+//   suggestionType:String,
+//   text:String,
+//   data:Object,
+//   score:Number,
+//   source:{
+//     type:String,
+//     enum:['ai','rule']
+//   },
+//   createdAt:{
+//     type:Date,
+//     default:Date.now
+//   }
+
+// });
+// module.exports=mongoose.model('Suggestion',suggestionSchema);

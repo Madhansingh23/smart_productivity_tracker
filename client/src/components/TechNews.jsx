@@ -4,12 +4,13 @@ import axios from "axios";
 export default function TechNews() {
   const [news, setNews] = useState([]);
   const [loading, setLoading] = useState(true);
+  const apiKey = import.meta.env.VITE_NEWS_API_KEY;
 
   useEffect(() => {
     const fetchNews = async () => {
       try {
         const res = await axios.get(
-          `https://newsapi.org/v2/top-headlines?category=technology&language=en&pageSize=5&apiKey=YOUR_NEWSAPI_KEY`
+          `https://newsapi.org/v2/top-headlines?category=technology&language=en&pageSize=5&apiKey=${apiKey}`
         );
         setNews(res.data.articles || []);
       } catch (err) {
@@ -20,7 +21,7 @@ export default function TechNews() {
     };
 
     fetchNews();
-  }, []);
+  }, [apiKey]);
 
   if (loading) {
     return <div className="text-gray-500 text-sm">Loading tech news...</div>;

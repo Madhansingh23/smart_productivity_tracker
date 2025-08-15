@@ -1,34 +1,45 @@
 const express = require('express');
 const router = express.Router();
-const multer = require('multer');
 const auth = require('../middleware/auth');
 const User = require('../models/User');
+const upload = require('../middleware/upload');
 
-const storage = multer.diskStorage({
-  destination: './uploads/profile-pics',
-  filename: (req, file, cb) => cb(null, `${Date.now()}-${file.originalname}`)
-});
-const upload = multer({ storage });
-
-// Get profile
-router.get('/:username', async (req, res) => {
+// Get profile by username
+router.get('/:username', auth, async (req,res)=>{
   try {
-    const user = await User.findOne({ username: req.params.username }).select('-password');
-    if (!user) return res.status(404).json({ error: 'User not found' });
+    const user = await User.findOne({ username: req.params.username }, '-password');
+    if(!user) return res.status(404).json({ error: 'Profile not found' });
     res.json(user);
-  } catch (err) {
-    res.status(500).json({ error: 'Server error' });
+  } catch(err){
+    console.error(err);
+    res.status(500).json({ error: 'server error' });
   }
 });
 
-// Upload profile pic
-router.post('/upload-pic', auth, upload.single('profilePic'), async (req, res) => {
+
+// Add this in profile routes
+router.get('/me', auth, async (req, res) => {
   try {
-    const filePath = `/uploads/profile-pics/${req.file.filename}`;
-    await User.findByIdAndUpdate(req.user._id, { profilePic: filePath });
-    res.json({ success: true, profilePic: filePath });
+    const user = await User.findById(req.user._id, '-password');
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    res.json(user);
   } catch (err) {
-    res.status(500).json({ error: 'Upload failed' });
+    console.error(err);
+    res.status(500).json({ error: 'server error' });
+  }
+});
+
+// Upload profile pic (current user)
+router.post('/upload-pic', auth, upload.single('profilePic'), async (req,res)=>{
+  try{
+    const user = await User.findById(req.user._id);
+    if(!user) return res.status(404).json({ error: 'User not found' });
+    user.profilePic = `/uploads/${req.file.filename}`;
+    await user.save();
+    res.json({ ok:true, profilePic: user.profilePic });
+  }catch(err){
+    console.error(err);
+    res.status(500).json({ error: 'upload failed' });
   }
 });
 

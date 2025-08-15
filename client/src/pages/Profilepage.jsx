@@ -6,14 +6,18 @@ export default function ProfilePage() {
   const { username } = useParams();
   const [user, setUser] = useState(null);
   const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState(null);
 
+  // Single, unified load function
   async function load() {
     try {
+      setError(null);
       const endpoint = username === 'me' ? '/profile/me' : `/profile/${username}`;
       const res = await api.get(endpoint);
       setUser(res.data);
     } catch (e) {
       console.error(e);
+      setError('Failed to load profile');
     }
   }
 
@@ -34,26 +38,23 @@ export default function ProfilePage() {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       await load();
+    } catch (e) {
+      console.error(e);
+      setError('Failed to upload picture');
     } finally {
       setUploading(false);
     }
   }
-  const [error, setError] = useState(null);
 
-async function load() {
-  try {
-    setError(null);
-    const endpoint = username === 'me' ? '/profile/me' : `/profile/${username}`;
-    const res = await api.get(endpoint);
-    setUser(res.data);
-  } catch (e) {
-    console.error(e);
-    setError('Failed to load profile');
+  if (error) {
+    return (
+      <div className="max-w-3xl mx-auto text-red-600 text-center p-4">
+        {error}
+      </div>
+    );
   }
-}
 
-
-  if (!user) return <div>Loading...</div>;
+  if (!user) return <div className="text-center p-4">Loading...</div>;
 
   return (
     <div className="max-w-3xl mx-auto">

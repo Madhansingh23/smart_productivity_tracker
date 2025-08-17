@@ -6,12 +6,17 @@ const userSchema = new mongoose.Schema({
   lastName:  { type: String, default: '' },
 
   username:  { type: String, required: true, unique: true, index: true, trim: true, lowercase: true },
+  usernameChanged: { type: Boolean, default: false },
   email:     { type: String, required: true, unique: true, index: true, lowercase: true, trim: true },
   phone:     { type: String, unique: true, sparse: true },
 
   password:  { type: String, required: true },
 
-  profilePic:{ type: String, default: '' },
+  // instead of file path
+  profilePic: {
+    data: Buffer,
+    contentType: String
+  },
 
   dob:       { type: Date },
   age:       { type: Number },
@@ -19,11 +24,6 @@ const userSchema = new mongoose.Schema({
 
   emailVerified: { type: Boolean, default: false },
   phoneVerified: { type: Boolean, default: false },
-
-  emailOtp:       { type: String, default: null },
-  emailOtpExpiry: { type: Date,   default: null },
-  phoneOtp:       { type: String, default: null },
-  phoneOtpExpiry: { type: Date,   default: null },
 
   points:   { type: Number, default: 0 },
   settings: {

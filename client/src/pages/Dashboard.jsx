@@ -21,16 +21,19 @@ export default function Dashboard() {
   }, []);
 
   useEffect(() => {
-    try {
-      const uRaw = localStorage.getItem("user");
-      if (uRaw) {
-        const u = JSON.parse(uRaw);
-        setPoints(u.points || 0);
-        setName(u.firstName || u.username || "");
-        if (u.profilePic) setProfilePic(`${API_BASE}${u.profilePic}`);
-      }
-    } catch {}
-  }, []);
+  try {
+    const uRaw = localStorage.getItem("user");
+    if (uRaw) {
+      const u = JSON.parse(uRaw);
+      setPoints(u.points || 0);
+      setName(u.firstName || u.username || "");
+     if (u.profilePic) setProfilePic(u.profilePic); // ✅ use base64 directly
+    }
+  } catch {}
+}, []);
+
+
+  
 
   const pending = tasks.filter((t) => t.status !== "completed");
 

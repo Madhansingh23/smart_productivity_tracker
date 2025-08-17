@@ -1,251 +1,259 @@
 import React, { useEffect, useState } from "react";
-import api, { API_BASE } from "../lib/api";
+import api, { API_BASE } from "../lib/api"; // import API_BASE
 import { useAuth } from "../context/AuthContext";
 
 export default function ProfilePage() {
   const { user, setUser } = useAuth();
 
-  const [profile, setProfile] = useState(null);
+  const [formData, setFormData] = useState(null);
   const [editMode, setEditMode] = useState(false);
-  const [previewImage, setPreviewImage] = useState(null);
+  const [availability, setAvailability] = useState({});
+  const [profilePicFile, setProfilePicFile] = useState(null);
+  const [loading, setLoading] = useState(false);
 
-  const [usernameSuggestions, setUsernameSuggestions] = useState([]);
-  const [otpSent, setOtpSent] = useState(false);
-  const [otp, setOtp] = useState("");
-  const [emailVerified, setEmailVerified] = useState(false);
-
-  const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
-    username: "",
-    email: "",
-    dob: "",
-    age: "",
-    address: "",
-    phone: "",
-    profilePic: null,
-  });
-
+  // Fetch user profile
   useEffect(() => {
-    (async () => {
-      const res = await api.get("/profile/me");
-      setProfile(res.data);
-      setEmailVerified(!!res.data.emailVerified);
-      setFormData({
-        firstName: res.data.firstName || "",
-        lastName: res.data.lastName || "",
-        username: res.data.username || "",
-        email: res.data.email || "",
-        dob: res.data.dob ? res.data.dob.split("T")[0] : "",
-        age: res.data.age || "",
-        address: res.data.address || "",
-        phone: res.data.phone || "",
-        profilePic: null,
-      });
-    })();
+    async function fetchProfile() {
+      try {
+        const res = await api.get("/profile/me");
+        setFormData(res.data);
+      } catch (err) {
+        console.error("Failed to fetch profile:", err);
+      }
+    }
+    fetchProfile();
   }, []);
 
-  const handleChange = async (e) => {
-    const { name, value, files } = e.target;
+  if (!formData) return <div className="p-6 text-gray-700">Loading...</div>;
 
-    if (files) {
-      const file = files[0];
-      setFormData((prev) => ({ ...prev, [name]: file }));
-      setPreviewImage(URL.createObjectURL(file));
-      return;
-    }
-
-    // text fields
+  // Handle input
+  const handleChange = (e) => {
+    const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+  };
 
-    if (name === "dob") {
-      const birthDate = new Date(value);
-      if (!isNaN(birthDate.getTime())) {
-        const today = new Date();
-        let age = today.getFullYear() - birthDate.getFullYear();
-        const m = today.getMonth() - birthDate.getMonth();
-        if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--;
-        setFormData((prev) => ({ ...prev, age }));
-      }
-    }
-
-    if (name === "username" && value.length > 3) {
-      try {
-        const res = await api.get(`/auth/check-username?username=${value}`);
-        setUsernameSuggestions(res.data.available ? [] : (res.data.suggestions || []));
-      } catch (err) { /* ignore */ }
-    }
-
-    if (name === "email" && value.includes("@")) {
-      try {
-        const res = await api.get(`/auth/check-email?email=${value}`);
-        if (!res.data.available && value !== profile.email) {
-          // only warn if it's not your current email
-          alert("Email already exists");
-        }
-      } catch (err) { /* ignore */ }
-    }
-
-    if (name === "phone" && value.length >= 10) {
-      const phoneRegex = /^[0-9]{10}$/;
-      if (!phoneRegex.test(value)) {
-        alert("Invalid phone number (10 digits only)");
-        return;
-      }
-      try {
-        const res = await api.get(`/auth/check-phone?phone=${value}`);
-        if (!res.data.available && value !== (profile.phone || '')) {
-          alert("Phone number already exists");
-        }
-      } catch (err) { /* ignore */ }
+  // File input
+  const handleFileChange = (e) => {
+    if (e.target.files.length > 0) {
+      setProfilePicFile(e.target.files[0]);
     }
   };
 
+  // Availability check (username/email/phone)
+  const checkAvailability = async (field, value) => {
+    if (!value) return;
+    try {
+      const res = await api.post("/profile/check", { field, value });
+      setAvailability((prev) => ({ ...prev, [field]: res.data.exists ? "taken" : "ok" }));
+    } catch {
+      setAvailability((prev) => ({ ...prev, [field]: "error" }));
+    }
+  };
+
+  // Save
   const handleSave = async () => {
-    const form = new FormData();
-    Object.entries(formData).forEach(([k, v]) => {
-      if (v !== null && v !== undefined && v !== "") {
-        form.append(k, v);
+    setLoading(true);
+    try {
+      const fd = new FormData();
+      Object.keys(formData).forEach((key) => {
+        if (formData[key] !== undefined && formData[key] !== null) {
+          fd.append(key, formData[key]);
+        }
+      });
+      if (profilePicFile) {
+        fd.append("profilePic", profilePicFile);
       }
-    });
 
-    const res = await api.put("/profile/update", form, {
-      headers: { "Content-Type": "multipart/form-data" },
-    });
+      // ❌ remove manual Content-Type override
+      const res = await api.put("/profile/update", fd);
 
-    // update local state + auth context
-    const me = await api.get("/profile/me");
-    setProfile(me.data);
-    setUser(me.data);
+      setUser(res.data.user); // update context
+      setFormData(res.data.user);
+      setEditMode(false);
+      setProfilePicFile(null);
+      alert("Profile updated successfully ✅");
+    } catch (err) {
+      console.error("Update failed:", err);
+      alert(err.response?.data?.error || "Update failed");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Cancel
+  const handleCancel = () => {
     setEditMode(false);
-    setPreviewImage(null);
+    setProfilePicFile(null);
+    api.get("/profile/me").then((res) => setFormData(res.data));
   };
-
-  const sendOtp = async () => {
-    try {
-      await api.post("/auth/send-otp", { email: formData.email });
-      setOtpSent(true);
-      alert("OTP sent to your email");
-    } catch {
-      alert("Failed to send OTP");
-    }
-  };
-
-  const verifyOtp = async () => {
-    try {
-      const res = await api.post("/auth/verify-otp", { email: formData.email, code: otp });
-      if (res.data.verified) {
-        setEmailVerified(true);
-        setOtpSent(false);
-        alert("Email verified!");
-      } else {
-        alert("Invalid code");
-      }
-    } catch {
-      alert("OTP verification failed");
-    }
-  };
-
-  if (!profile) return <p>Loading...</p>;
-
-  const imgSrc = profile.profilePic ? `${API_BASE}${profile.profilePic}` : "/default-avatar.png";
 
   return (
-    <div className="max-w-2xl mx-auto p-4">
-      <div className="bg-white border rounded-xl p-5 shadow-sm">
-        <div className="flex items-center gap-4">
-          <img
-            src={previewImage || imgSrc}
-            alt="Profile"
-            className="w-20 h-20 rounded-full object-cover border"
+    <div className="max-w-2xl mx-auto p-6 bg-white dark:bg-gray-800 rounded-lg shadow-md">
+      <h2 className="text-2xl font-bold mb-4 text-gray-800 dark:text-gray-100">
+        Profile
+      </h2>
+
+      {/* Profile Pic */}
+      <div className="flex items-center mb-4">
+        <img
+  src={
+    profilePicFile
+      ? URL.createObjectURL(profilePicFile)
+      : formData.profilePic || "/default-avatar.png" // ✅ now profilePic is base64 from backend
+  }
+  alt="Profile"
+  className="w-20 h-20 rounded-full object-cover border"
+/>
+
+        {editMode && (
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleFileChange}
+            className="ml-4"
           />
-          <div>
-            <div className="text-xl font-semibold">
-              {profile.firstName} {profile.lastName} <span className="text-gray-500">@{profile.username}</span>
-            </div>
-            <div className="text-gray-600 text-sm">{profile.address || 'No address yet'}</div>
-          </div>
+        )}
+      </div>
+
+      {/* Form Fields */}
+      <div className="space-y-4">
+        {/* First + Last Name */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
+            First Name
+          </label>
+          <input
+            name="firstName"
+            value={formData.firstName || ""}
+            onChange={handleChange}
+            disabled={!editMode}
+            className="mt-1 w-full border rounded px-3 py-2 dark:bg-gray-700 dark:text-white"
+          />
         </div>
 
-        <hr className="my-4" />
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
+            Last Name
+          </label>
+          <input
+            name="lastName"
+            value={formData.lastName || ""}
+            onChange={handleChange}
+            disabled={!editMode}
+            className="mt-1 w-full border rounded px-3 py-2 dark:bg-gray-700 dark:text-white"
+          />
+        </div>
 
+        {/* Username */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
+            Username
+          </label>
+          <input
+            name="username"
+            value={formData.username || ""}
+            onChange={handleChange}
+            onBlur={() => checkAvailability("username", formData.username)}
+            disabled={!editMode}
+            className="mt-1 w-full border rounded px-3 py-2 dark:bg-gray-700 dark:text-white"
+          />
+          {availability.username === "taken" && (
+            <p className="text-red-500 text-sm">Username already exists</p>
+          )}
+        </div>
+
+        {/* Email */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
+            Email
+          </label>
+          <input
+            type="email"
+            name="email"
+            value={formData.email || ""}
+            onChange={handleChange}
+            onBlur={() => checkAvailability("email", formData.email)}
+            disabled={!editMode}
+            className="mt-1 w-full border rounded px-3 py-2 dark:bg-gray-700 dark:text-white"
+          />
+          {availability.email === "taken" && (
+            <p className="text-red-500 text-sm">Email already in use</p>
+          )}
+        </div>
+
+        {/* Phone */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
+            Phone
+          </label>
+          <input
+            name="phone"
+            value={formData.phone || ""}
+            onChange={handleChange}
+            onBlur={() => checkAvailability("phone", formData.phone)}
+            disabled={!editMode}
+            className="mt-1 w-full border rounded px-3 py-2 dark:bg-gray-700 dark:text-white"
+          />
+          {availability.phone === "taken" && (
+            <p className="text-red-500 text-sm">Phone already in use</p>
+          )}
+        </div>
+
+        {/* Address */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
+            Address
+          </label>
+          <input
+            name="address"
+            value={formData.address || ""}
+            onChange={handleChange}
+            disabled={!editMode}
+            className="mt-1 w-full border rounded px-3 py-2 dark:bg-gray-700 dark:text-white"
+          />
+        </div>
+
+        {/* DOB */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
+            Date of Birth
+          </label>
+          <input
+            type="date"
+            name="dob"
+            value={formData.dob ? formData.dob.substring(0, 10) : ""}
+            onChange={handleChange}
+            disabled={!editMode}
+            className="mt-1 w-full border rounded px-3 py-2 dark:bg-gray-700 dark:text-white"
+          />
+        </div>
+      </div>
+
+      {/* Action Buttons */}
+      <div className="mt-6 flex gap-3">
         {editMode ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <input className="border rounded p-2" name="firstName" placeholder="First name" value={formData.firstName} onChange={handleChange} />
-            <input className="border rounded p-2" name="lastName"  placeholder="Last name" value={formData.lastName} onChange={handleChange} />
-
-            <div className="sm:col-span-2">
-              <input className="border rounded p-2 w-full" name="username" placeholder="Username" value={formData.username} onChange={handleChange} />
-              {usernameSuggestions.length > 0 && (
-                <p className="text-xs text-red-600 mt-1">Unavailable. Try: {usernameSuggestions.join(", ")}</p>
-              )}
-            </div>
-
-            <div className="sm:col-span-2 flex items-center gap-2">
-              <input className="border rounded p-2 flex-1" type="email" name="email" placeholder="Email" value={formData.email} onChange={handleChange} />
-              {!emailVerified ? (
-                !otpSent ? (
-                  <button onClick={sendOtp} className="px-3 py-2 rounded bg-gray-700 text-white">Send OTP</button>
-                ) : (
-                  <>
-                    <input className="border rounded p-2" placeholder="Enter OTP" value={otp} onChange={(e)=>setOtp(e.target.value)} />
-                    <button onClick={verifyOtp} className="px-3 py-2 rounded bg-green-600 text-white">Verify</button>
-                  </>
-                )
-              ) : (
-                <span className="text-green-600 text-sm font-medium">Verified</span>
-              )}
-            </div>
-
-            <input className="border rounded p-2" type="date" name="dob" value={formData.dob} onChange={handleChange} />
-            <input className="border rounded p-2" name="age" value={formData.age} readOnly placeholder="Age" />
-
-            <input className="border rounded p-2 sm:col-span-2" name="address" placeholder="Address" value={formData.address} onChange={handleChange} />
-            <input className="border rounded p-2 sm:col-span-2" name="phone" placeholder="Phone (10 digits)" value={formData.phone} onChange={handleChange} />
-
-            <div className="sm:col-span-2">
-              <input type="file" name="profilePic" accept="image/*" onChange={handleChange} />
-            </div>
-
-            <div className="sm:col-span-2 flex gap-2">
-              <button onClick={handleSave} className="px-4 py-2 rounded bg-blue-600 text-white">Save</button>
-              <button onClick={() => { setEditMode(false); setPreviewImage(null); }} className="px-4 py-2 rounded bg-gray-200">Cancel</button>
-            </div>
-          </div>
-        ) : (
           <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="bg-gray-50 rounded p-3">
-                <div className="text-xs text-gray-500">Name</div>
-                <div className="font-medium">{profile.firstName} {profile.lastName}</div>
-              </div>
-              <div className="bg-gray-50 rounded p-3">
-                <div className="text-xs text-gray-500">Username</div>
-                <div className="font-medium">@{profile.username}</div>
-              </div>
-              <div className="bg-gray-50 rounded p-3">
-                <div className="text-xs text-gray-500">Email</div>
-                <div className="font-medium">{profile.email} {!profile.emailVerified && <span className="text-yellow-600">(unverified)</span>}</div>
-              </div>
-              <div className="bg-gray-50 rounded p-3">
-                <div className="text-xs text-gray-500">Phone</div>
-                <div className="font-medium">{profile.phone || '-'}</div>
-              </div>
-              <div className="bg-gray-50 rounded p-3">
-                <div className="text-xs text-gray-500">DOB</div>
-                <div className="font-medium">{profile.dob ? profile.dob.split('T')[0] : '-'}</div>
-              </div>
-              <div className="bg-gray-50 rounded p-3">
-                <div className="text-xs text-gray-500">Age</div>
-                <div className="font-medium">{profile.age ?? '-'}</div>
-              </div>
-              <div className="bg-gray-50 rounded p-3 sm:col-span-2">
-                <div className="text-xs text-gray-500">Address</div>
-                <div className="font-medium">{profile.address || '-'}</div>
-              </div>
-            </div>
-            <button onClick={() => setEditMode(true)} className="bg-gray-700 text-white px-4 py-2 mt-4 rounded">Edit</button>
+            <button
+              onClick={handleSave}
+              disabled={loading}
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+            >
+              {loading ? "Saving..." : "Save"}
+            </button>
+            <button
+              onClick={handleCancel}
+              className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+            >
+              Cancel
+            </button>
           </>
+        ) : (
+          <button
+            onClick={() => setEditMode(true)}
+            className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
+          >
+            Edit
+          </button>
         )}
       </div>
     </div>

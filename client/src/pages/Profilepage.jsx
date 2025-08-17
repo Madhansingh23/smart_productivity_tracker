@@ -94,7 +94,7 @@ export default function ProfilePage() {
       </h2>
 
       {/* Profile Pic */}
-      <div className="flex items-center mb-4">
+      <div className="flex items-center mb-4 ">
         <img
   src={
     profilePicFile
@@ -102,7 +102,7 @@ export default function ProfilePage() {
       : formData.profilePic || "/default-avatar.png" // ✅ now profilePic is base64 from backend
   }
   alt="Profile"
-  className="w-20 h-20 rounded-full object-cover border"
+  className="w-40 h-40 rounded-full object-cover border mx-auto"
 />
 
         {editMode && (

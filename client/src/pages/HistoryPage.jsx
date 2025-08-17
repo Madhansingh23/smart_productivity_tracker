@@ -1,43 +1,78 @@
+// src/pages/HistoryPage.jsx
 import React, { useEffect, useState } from "react";
 import api from "../lib/api";
+import toast, { Toaster } from "react-hot-toast";
+import { Clock, Archive, AlertCircle } from "lucide-react";
 
 export default function HistoryPage() {
   const [history, setHistory] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  async function loadHistory() {
+    setLoading(true);
+    try {
+      const res = await api.get("/tasks/history");
+      setHistory(res.data || []);
+    } catch (err) {
+      console.error("Failed to fetch history", err);
+      toast.error("Failed to load archived tasks");
+    } finally {
+      setLoading(false);
+    }
+  }
 
   useEffect(() => {
-    async function load() {
-      try {
-        const res = await api.get("/tasks/history");
-        setHistory(res);
-      } catch {
-        alert("Failed to load history");
-      }
-    }
-    load();
+    loadHistory();
   }, []);
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-6 text-neutral-900 dark:text-neutral-100">
-      <h2 className="text-2xl font-bold mb-6">📜 Task History</h2>
-      {history.length === 0 ? (
-        <p className="text-neutral-500">No history yet.</p>
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 text-neutral-900 dark:text-neutral-100">
+      <Toaster position="top-right" />
+
+      <h2 className="text-2xl font-bold mb-8 text-center sm:text-left flex items-center gap-2">
+        <Archive size={22} />
+        Archived Tasks
+      </h2>
+
+      {loading ? (
+        <p className="text-neutral-500">Loading history...</p>
+      ) : history.length === 0 ? (
+        <div className="flex items-center gap-2 text-neutral-500 italic">
+          <AlertCircle size={18} /> No archived tasks yet.
+        </div>
       ) : (
-        <ul className="space-y-4">
-          {history.map((h) => (
-            <li
-              key={h._id}
-              className="p-4 border rounded-lg bg-white dark:bg-neutral-900 dark:border-neutral-800 shadow-sm"
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {history.map((t) => (
+            <div
+              key={t._id}
+              className="bg-white dark:bg-neutral-900 border dark:border-neutral-800 rounded-lg p-4 shadow-sm hover:shadow-md transition flex flex-col justify-between"
             >
-              <div className="font-semibold">{h.title}</div>
-              <div className="text-sm text-neutral-500">
-                {h.description || "—"}
+              <div>
+                <h3 className="font-semibold text-base mb-1 break-words">
+                  {t.title}
+                </h3>
+                <p className="text-sm text-neutral-600 dark:text-neutral-400 break-words">
+                  {t.description || "—"}
+                </p>
+
+                <div className="mt-3 text-xs text-neutral-500 space-y-1">
+                  <div className="flex items-center gap-1">
+                    <Clock size={14} />
+                    Due:{" "}
+                    {t.dueAt ? new Date(t.dueAt).toLocaleString() : "—"}
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Archive size={14} />
+                    Archived:{" "}
+                    {t.archivedAt
+                      ? new Date(t.archivedAt).toLocaleString()
+                      : "—"}
+                  </div>
+                </div>
               </div>
-              <div className="text-xs text-neutral-400 mt-1">
-                Archived on {new Date(h.archivedAt).toLocaleString()}
-              </div>
-            </li>
+            </div>
           ))}
-        </ul>
+        </div>
       )}
     </div>
   );

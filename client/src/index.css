@@ -1,3 +1,13 @@
 
 @tailwind base; @tailwind components; @tailwind utilities;
-html,body,#root{height:100%} body{@apply bg-gray-50;}
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  background: #f9fafb; /* light background */
+}
+body {
+  overscroll-behavior: none; /* 🚀 prevents "bounce" white space on drag */
+}

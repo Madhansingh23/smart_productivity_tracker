@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import api, { getTasksFast, invalidateTasksCache } from "../lib/api";
-import { Trash2, RotateCcw, CheckCircle2 } from "lucide-react";
+import { Trash2, RotateCcw, CheckCircle2, PlusCircle } from "lucide-react";
+import toast, { Toaster } from "react-hot-toast";
 
 const STEPS = ["created", "in-progress", "checking", "completed"];
 const COLORS = {
@@ -13,6 +14,12 @@ const COLORS = {
 export default function TasksPage() {
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [newTask, setNewTask] = useState({
+    title: "",
+    description: "",
+    dueAt: "",
+    remindAt: ""
+  });
 
   async function load() {
     setLoading(true);
@@ -25,6 +32,19 @@ export default function TasksPage() {
   useEffect(() => {
     load();
   }, []);
+
+  async function createTask(e) {
+    e.preventDefault();
+    try {
+      const res = await api.post("/tasks", newTask);
+      setTasks([res.data, ...tasks]);
+      setNewTask({ title: "", description: "", dueAt: "", remindAt: "" });
+      invalidateTasksCache();
+      toast.success("Task created successfully!");
+    } catch {
+      toast.error("Failed to create task");
+    }
+  }
 
   async function advance(t) {
     const prev = tasks;
@@ -42,11 +62,16 @@ export default function TasksPage() {
       )
     );
     try {
-      await api.post(`/tasks/${t._id}/advance`);
+      const res = await api.post(`/tasks/${t._id}/advance`);
       invalidateTasksCache();
+      if (res.data.status === "completed") {
+        toast.success(`🎉 Task "${t.title}" completed!`);
+      } else {
+        toast.success(`Task moved to ${res.data.status}`);
+      }
     } catch {
       setTasks(prev);
-      alert("Failed to advance");
+      toast.error("Failed to advance");
     }
   }
 
@@ -60,9 +85,10 @@ export default function TasksPage() {
     try {
       await api.post(`/tasks/${t._id}/redo`);
       invalidateTasksCache();
+      toast("Task reset to Created", { icon: "🔄" });
     } catch {
       setTasks(prev);
-      alert("Failed to redo");
+      toast.error("Failed to redo");
     }
   }
 
@@ -73,9 +99,10 @@ export default function TasksPage() {
     try {
       await api.delete(`/tasks/${t._id}`);
       invalidateTasksCache();
+      toast.success("Task deleted");
     } catch {
       setTasks(prev);
-      alert("Delete failed");
+      toast.error("Delete failed");
     }
   }
 
@@ -119,7 +146,6 @@ export default function TasksPage() {
                     </div>
                   </div>
 
-                  {/* Completed timestamp */}
                   {t.status === "completed" && (
                     <div className="text-xs text-neutral-400 mt-2">
                       ✅ Completed on:{" "}
@@ -130,7 +156,6 @@ export default function TasksPage() {
                   )}
                 </div>
 
-                {/* Action buttons */}
                 <div className="mt-4 flex gap-2 flex-wrap">
                   {t.status !== "completed" && (
                     <button
@@ -163,9 +188,80 @@ export default function TasksPage() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 text-neutral-900 dark:text-neutral-100">
+      <Toaster position="top-right" />
+
       <h2 className="text-2xl font-bold mb-8 text-center sm:text-left">
         Tasks by Phases
       </h2>
+
+      {/* Task creation form */}
+      <form
+  onSubmit={createTask}
+  className="mb-8 p-4 rounded-lg border dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-sm"
+>
+  <h3 className="text-lg font-semibold mb-4">➕ Create New Task</h3>
+
+  <div className="grid sm:grid-cols-2 gap-4">
+    <div>
+      <label className="block text-sm mb-1 text-neutral-700 dark:text-neutral-300">
+        Title
+      </label>
+      <input
+        type="text"
+        className="border rounded px-3 py-2 text-sm w-full bg-white dark:bg-neutral-800 dark:text-neutral-100"
+        value={newTask.title}
+        onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
+        required
+      />
+    </div>
+
+    <div>
+      <label className="block text-sm mb-1 text-neutral-700 dark:text-neutral-300">
+        Description
+      </label>
+      <input
+        type="text"
+        className="border rounded px-3 py-2 text-sm w-full bg-white dark:bg-neutral-800 dark:text-neutral-100"
+        value={newTask.description}
+        onChange={(e) =>
+          setNewTask({ ...newTask, description: e.target.value })
+        }
+      />
+    </div>
+
+    <div>
+      <label className="block text-sm mb-1 text-neutral-700 dark:text-neutral-300">
+        Required Completion Date
+      </label>
+      <input
+        type="date"
+        className="border rounded px-3 py-2 text-sm w-full bg-white dark:bg-neutral-800 dark:text-neutral-100"
+        value={newTask.dueAt}
+        onChange={(e) => setNewTask({ ...newTask, dueAt: e.target.value })}
+      />
+    </div>
+
+    <div>
+      <label className="block text-sm mb-1 text-neutral-700 dark:text-neutral-300">
+        Notify Date
+      </label>
+      <input
+        type="date"
+        className="border rounded px-3 py-2 text-sm w-full bg-white dark:bg-neutral-800 dark:text-neutral-100"
+        value={newTask.remindAt}
+        onChange={(e) => setNewTask({ ...newTask, remindAt: e.target.value })}
+      />
+    </div>
+  </div>
+
+  <button
+    type="submit"
+    className="mt-4 px-4 py-2 rounded bg-emerald-600 text-white text-sm hover:bg-emerald-700 transition"
+  >
+    Add Task
+  </button>
+</form>
+
 
       {loading ? (
         <p className="text-neutral-500">Loading...</p>

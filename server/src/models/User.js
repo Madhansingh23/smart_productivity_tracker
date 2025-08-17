@@ -1,74 +1,47 @@
+// src/models/User.js
 const mongoose = require('mongoose');
 
 const userSchema = new mongoose.Schema({
-  username: { type: String, required: true, unique: true, index: true },
-  email: { type: String, required: true, unique: true, index: true },
-  password: { type: String, required: true },
-  profilePic: { type: String, default: '' }, // store image path or URL
-  age: { type: Number },
-  dob: { type: Date },
-  selfDescription: { type: String },
-  points: { type: Number, default: 0 },
+  firstName: { type: String, default: '' },
+  lastName:  { type: String, default: '' },
+
+  username:  { type: String, required: true, unique: true, index: true, trim: true, lowercase: true },
+  email:     { type: String, required: true, unique: true, index: true, lowercase: true, trim: true },
+  phone:     { type: String, unique: true, sparse: true },
+
+  password:  { type: String, required: true },
+
+  profilePic:{ type: String, default: '' },
+
+  dob:       { type: Date },
+  age:       { type: Number },
+  address:   { type: String, default: '' },
+
+  emailVerified: { type: Boolean, default: false },
+  phoneVerified: { type: Boolean, default: false },
+
+  emailOtp:       { type: String, default: null },
+  emailOtpExpiry: { type: Date,   default: null },
+  phoneOtp:       { type: String, default: null },
+  phoneOtpExpiry: { type: Date,   default: null },
+
+  points:   { type: Number, default: 0 },
   settings: {
     timezone: { type: String, default: 'UTC' },
     minDailyTasks: { type: Number, default: 1 },
     notificationsEnabled: { type: Boolean, default: true }
   },
+
   createdAt: { type: Date, default: Date.now }
 });
 
-module.exports = mongoose.model('User', userSchema);
+userSchema.methods.recalcAge = function () {
+  if (!this.dob) { this.age = undefined; return; }
+  const today = new Date();
+  let age = today.getFullYear() - this.dob.getFullYear();
+  const m = today.getMonth() - this.dob.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < this.dob.getDate())) age--;
+  this.age = age;
+};
 
-// const mongoose=require('mongoose');
-// const userSchema=new mongoose.Schema({
-//   username:{
-//     type:String,
-//     required:true,
-//     unique:true,
-//     index:true,
-//   },
-//   email:{
-//     type:String,
-//     required:true,
-//     unique:true,
-//     index:true,
-//   },
-//   password:{
-//     type:String,
-//     default:'',
-//     required:true,
-//   },
-//   profilePic:{
-//     type:String,
-//     default:'',
-//   },
-//   age:{
-//     type:Number,
-//   },
-//   dob:{
-//     type:Date,
-//   },
-//   selfDescription:
-//   {
-//     type:String,
-//   },
-//   points:{
-//     type:String,
-//     default:0,
-//   },
-//   settings:{
-//     timeZone:{
-//       type:String,
-//       default:'UTC',
-//     },
-//     minDailyTasks:{
-//       type:Number,
-//       default:1,
-//     },
-//     notificationsEnabled:{
-//       type:Boolean,
-//       default:true,
-//     }
-//   },
-// });
-// module.exports=new mongoose.model('User',userSchema);
+module.exports = mongoose.model('User', userSchema);

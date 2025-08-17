@@ -1,158 +1,54 @@
-import React, { useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
-import {
-  LayoutDashboard,
-  CheckSquare,
-  HelpCircle,
-  LogIn,
-  LogOut,
-  UserCircle2,
-  Menu,
-} from "lucide-react";
+// src/components/SidebarLayout.jsx
+import { NavLink } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
+import { Sun, Moon, LogOut } from 'lucide-react';
 
 export default function SidebarLayout({ children }) {
-  const { token, setToken, setUser, user } = useAuth();
-  const nav = useNavigate();
-  const location = useLocation();
-  const [expanded, setExpanded] = useState(false);
-  const [mobileOpen, setMobileOpen] = useState(false);
-
-  function logout() {
-    setToken(null);
-    setUser(null);
-    nav("/login");
-  }
-
-  const menuItems = [
-    { name: "Dashboard", path: "/", icon: <LayoutDashboard size={22} /> },
-    { name: "Tasks", path: "/tasks", icon: <CheckSquare size={22} /> },
-    { name: "Decision Helper", path: "/decision-helper", icon: <HelpCircle size={22} /> },
-    {
-      name: "Profile",
-      path: user?.username ? `/profile/${user.username}` : "/profile/me",
-      icon: <UserCircle2 size={22} />,
-    },
-  ];
-
-  const profilePic = user?.profilePic || "/default-avatar.png";
-
-  const SidebarInner = ({ isExpanded }) => (
-    <div className="flex h-full flex-col">
-      {/* Profile */}
-      <div className="flex flex-col items-center p-4">
-        {user ? (
-          <img
-            src={profilePic}
-            alt={user.name || "User"}
-            className="w-12 h-12 rounded-full object-cover cursor-pointer transition-transform hover:scale-105"
-            onClick={() => nav(`/profile/${user.username || "me"}`)}
-          />
-        ) : (
-          <UserCircle2 size={48} className="text-gray-400" />
-        )}
-        {isExpanded && user && (
-          <h3 className="mt-2 text-sm font-semibold text-center truncate w-full">
-            {user.name}
-          </h3>
-        )}
-      </div>
-
-      {/* Navigation */}
-      <nav className="mt-2 flex flex-col gap-1 flex-1">
-        {menuItems.map((item) => {
-          const active =
-            location.pathname === item.path ||
-            (item.path !== "/" && location.pathname.startsWith(item.path));
-          return (
-            <Link
-              key={item.name}
-              to={item.path}
-              className={`flex items-center gap-3 p-3 rounded mx-2 transition
-                ${
-                  active
-                    ? "bg-blue-50 text-blue-700"
-                    : "hover:bg-gray-100 text-gray-700"
-                }`}
-              onClick={() => setMobileOpen(false)}
-            >
-              <span className="shrink-0">{item.icon}</span>
-              {isExpanded && <span className="truncate">{item.name}</span>}
-            </Link>
-          );
-        })}
-      </nav>
-
-      {/* Auth Button */}
-      <div className="p-3 mt-auto">
-        {token ? (
-          <button
-            onClick={logout}
-            className="w-full flex items-center gap-2 justify-center rounded bg-blue-600 text-white py-2 hover:bg-blue-700 transition"
-          >
-            <LogOut size={18} />
-            {isExpanded && "Logout"}
-          </button>
-        ) : (
-          <Link
-            to="/login"
-            className="w-full flex items-center gap-2 justify-center rounded bg-blue-600 text-white py-2 hover:bg-blue-700 transition"
-          >
-            <LogIn size={18} />
-            {isExpanded && "Login"}
-          </Link>
-        )}
-      </div>
-    </div>
-  );
+  const { user, setToken, setUser } = useAuth();
+  const { theme, setTheme } = useTheme();
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
-      {/* Floating Mobile Button */}
-      <div className="lg:hidden fixed bottom-4 left-4 z-50">
-        <button
-          aria-label="Open menu"
-          className="p-3 rounded-full bg-blue-600 text-white shadow-lg hover:bg-blue-700 transition"
-          onClick={() => setMobileOpen(true)}
-        >
-          <Menu size={22} />
-        </button>
+    <div className="min-h-screen bg-gray-50 dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100">
+      <div className="flex">
+        <aside className="w-60 hidden md:block border-r dark:border-neutral-800 p-4">
+          <div className="flex items-center gap-3 mb-6">
+            <img src={user?.profilePic ? user.profilePic : '/default-avatar.png'} className="w-10 h-10 rounded-full object-cover" />
+            <div className="text-sm">
+              <div className="font-semibold">@{user?.username}</div>
+              <div className="text-neutral-500 dark:text-neutral-400">{user?.email}</div>
+            </div>
+          </div>
+          <nav className="space-y-2 text-sm">
+            <NavLink to="/" className="block px-3 py-2 rounded hover:bg-neutral-100 dark:hover:bg-neutral-800">Dashboard</NavLink>
+            <NavLink to="/tasks" className="block px-3 py-2 rounded hover:bg-neutral-100 dark:hover:bg-neutral-800">Tasks</NavLink>
+            <NavLink to="/decision-helper" className="block px-3 py-2 rounded hover:bg-neutral-100 dark:hover:bg-neutral-800">Decision Helper</NavLink>
+            <NavLink to={`/profile/${user?.username}`} className="block px-3 py-2 rounded hover:bg-neutral-100 dark:hover:bg-neutral-800">Profile</NavLink>
+          </nav>
+        </aside>
+        <main className="flex-1">
+          <header className="sticky top-0 z-10 backdrop-blur bg-white/70 dark:bg-neutral-900/60 border-b dark:border-neutral-800 px-4 py-3 flex items-center justify-between">
+            <div className="md:hidden font-semibold">@{user?.username}</div>
+            <div className="flex items-center gap-2">
+              <button
+                aria-label="Toggle theme"
+                className="p-2 rounded border dark:border-neutral-700"
+                onClick={()=> setTheme(theme==='dark' ? 'light' : 'dark')}
+              >
+                {theme==='dark' ? <Sun size={18}/> : <Moon size={18}/>}
+              </button>
+              <button
+                className="p-2 rounded border dark:border-neutral-700"
+                onClick={()=>{ setToken(null); setUser(null); }}
+                title="Sign out"
+              >
+                <LogOut size={18}/>
+              </button>
+            </div>
+          </header>
+          <div className="p-4 md:p-6">{children}</div>
+        </main>
       </div>
-
-      {/* Desktop Sidebar */}
-      <aside
-        className={`hidden lg:block bg-white border-r h-screen sticky top-0 transition-all duration-200 ease-in-out
-        ${expanded ? "w-56" : "w-20"}`}
-        onMouseEnter={() => setExpanded(true)}
-        onMouseLeave={() => setExpanded(false)}
-      >
-        <SidebarInner isExpanded={expanded} />
-      </aside>
-
-      {/* Mobile Fullscreen Menu */}
-      {mobileOpen && (
-        <div className="lg:hidden fixed inset-0 z-50 bg-white flex flex-col">
-          {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b">
-            <div className="font-semibold text-lg">Menu</div>
-            <button
-              aria-label="Close menu"
-              onClick={() => setMobileOpen(false)}
-              className="p-2 rounded hover:bg-gray-100"
-            >
-              ✕
-            </button>
-          </div>
-
-          {/* Menu Content */}
-          <div className="flex-1 overflow-y-auto p-4">
-            <SidebarInner isExpanded={true} />
-          </div>
-        </div>
-      )}
-
-      {/* Main Content */}
-      <main className="flex-1 p-4 lg:p-6">{children}</main>
     </div>
   );
 }

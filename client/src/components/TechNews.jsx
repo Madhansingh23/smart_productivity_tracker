@@ -10,7 +10,7 @@ export default function TechNews() {
     const fetchNews = async () => {
       try {
         const res = await axios.get(
-          `https://newsapi.org/v2/top-headlines?category=technology&language=en&pageSize=5&apiKey=${apiKey}`
+          `https://newsapi.org/v2/top-headlines?sources=techcrunch&apiKey=${apiKey}`
         );
         setNews(res.data.articles || []);
       } catch (err) {

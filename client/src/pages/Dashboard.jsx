@@ -27,7 +27,7 @@ export default function Dashboard() {
       const u = JSON.parse(uRaw);
       setPoints(u.points || 0);
       setName(u.firstName || u.username || "");
-     if (u.profilePic) setProfilePic(u.profilePic); // ✅ use base64 directly
+     if (u.profilePic) setProfilePic(u.profilePic); 
     }
   } catch {}
 }, []);

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import api, { getTasksFast, invalidateTasksCache } from "../lib/api";
-import { Trash2, RotateCcw, CheckCircle2, PlusCircle } from "lucide-react";
+import { Trash2, RotateCcw, CheckCircle2, Archive } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
 
 const STEPS = ["created", "in-progress", "checking", "completed"];
@@ -92,6 +92,19 @@ export default function TasksPage() {
     }
   }
 
+  async function archive(t) {
+    const prev = tasks;
+    setTasks((ts) => ts.filter((x) => x._id !== t._id));
+    try {
+      await api.post(`/tasks/${t._id}/archive`);
+      invalidateTasksCache();
+      toast.success(`📦 Task "${t.title}" archived!`);
+    } catch {
+      setTasks(prev);
+      toast.error("Failed to archive");
+    }
+  }
+
   async function remove(t) {
     if (!confirm("Delete this task?")) return;
     const prev = tasks;
@@ -172,6 +185,12 @@ export default function TasksPage() {
                     <RotateCcw size={14} /> Redo
                   </button>
                   <button
+                    onClick={() => archive(t)}
+                    className="flex-1 sm:flex-none px-3 py-1.5 rounded border text-sm flex items-center justify-center gap-1 hover:bg-blue-50 dark:hover:bg-neutral-800 transition"
+                  >
+                    <Archive size={14} /> Archive
+                  </button>
+                  <button
                     onClick={() => remove(t)}
                     className="flex-1 sm:flex-none px-3 py-1.5 rounded border text-sm flex items-center justify-center gap-1 hover:bg-red-50 dark:hover:bg-neutral-800 transition"
                   >
@@ -196,72 +215,73 @@ export default function TasksPage() {
 
       {/* Task creation form */}
       <form
-  onSubmit={createTask}
-  className="mb-8 p-4 rounded-lg border dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-sm"
->
-  <h3 className="text-lg font-semibold mb-4">➕ Create New Task</h3>
+        onSubmit={createTask}
+        className="mb-8 p-4 rounded-lg border dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-sm"
+      >
+        <h3 className="text-lg font-semibold mb-4">➕ Create New Task</h3>
 
-  <div className="grid sm:grid-cols-2 gap-4">
-    <div>
-      <label className="block text-sm mb-1 text-neutral-700 dark:text-neutral-300">
-        Title
-      </label>
-      <input
-        type="text"
-        className="border rounded px-3 py-2 text-sm w-full bg-white dark:bg-neutral-800 dark:text-neutral-100"
-        value={newTask.title}
-        onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
-        required
-      />
-    </div>
+        <div className="grid sm:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm mb-1 text-neutral-700 dark:text-neutral-300">
+              Title
+            </label>
+            <input
+              type="text"
+              className="border rounded px-3 py-2 text-sm w-full bg-white dark:bg-neutral-800 dark:text-neutral-100"
+              value={newTask.title}
+              onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
+              required
+            />
+          </div>
 
-    <div>
-      <label className="block text-sm mb-1 text-neutral-700 dark:text-neutral-300">
-        Description
-      </label>
-      <input
-        type="text"
-        className="border rounded px-3 py-2 text-sm w-full bg-white dark:bg-neutral-800 dark:text-neutral-100"
-        value={newTask.description}
-        onChange={(e) =>
-          setNewTask({ ...newTask, description: e.target.value })
-        }
-      />
-    </div>
+          <div>
+            <label className="block text-sm mb-1 text-neutral-700 dark:text-neutral-300">
+              Description
+            </label>
+            <input
+              type="text"
+              className="border rounded px-3 py-2 text-sm w-full bg-white dark:bg-neutral-800 dark:text-neutral-100"
+              value={newTask.description}
+              onChange={(e) =>
+                setNewTask({ ...newTask, description: e.target.value })
+              }
+            />
+          </div>
 
-    <div>
-      <label className="block text-sm mb-1 text-neutral-700 dark:text-neutral-300">
-        Required Completion Date
-      </label>
-      <input
-        type="date"
-        className="border rounded px-3 py-2 text-sm w-full bg-white dark:bg-neutral-800 dark:text-neutral-100"
-        value={newTask.dueAt}
-        onChange={(e) => setNewTask({ ...newTask, dueAt: e.target.value })}
-      />
-    </div>
+          <div>
+            <label className="block text-sm mb-1 text-neutral-700 dark:text-neutral-300">
+              Required Completion Date
+            </label>
+            <input
+              type="date"
+              className="border rounded px-3 py-2 text-sm w-full bg-white dark:bg-neutral-800 dark:text-neutral-100"
+              value={newTask.dueAt}
+              onChange={(e) => setNewTask({ ...newTask, dueAt: e.target.value })}
+            />
+          </div>
 
-    <div>
-      <label className="block text-sm mb-1 text-neutral-700 dark:text-neutral-300">
-        Notify Date
-      </label>
-      <input
-        type="date"
-        className="border rounded px-3 py-2 text-sm w-full bg-white dark:bg-neutral-800 dark:text-neutral-100"
-        value={newTask.remindAt}
-        onChange={(e) => setNewTask({ ...newTask, remindAt: e.target.value })}
-      />
-    </div>
-  </div>
+          <div>
+            <label className="block text-sm mb-1 text-neutral-700 dark:text-neutral-300">
+              Notify Date
+            </label>
+            <input
+              type="date"
+              className="border rounded px-3 py-2 text-sm w-full bg-white dark:bg-neutral-800 dark:text-neutral-100"
+              value={newTask.remindAt}
+              onChange={(e) =>
+                setNewTask({ ...newTask, remindAt: e.target.value })
+              }
+            />
+          </div>
+        </div>
 
-  <button
-    type="submit"
-    className="mt-4 px-4 py-2 rounded bg-emerald-600 text-white text-sm hover:bg-emerald-700 transition"
-  >
-    Add Task
-  </button>
-</form>
-
+        <button
+          type="submit"
+          className="mt-4 px-4 py-2 rounded bg-emerald-600 text-white text-sm hover:bg-emerald-700 transition"
+        >
+          Add Task
+        </button>
+      </form>
 
       {loading ? (
         <p className="text-neutral-500">Loading...</p>

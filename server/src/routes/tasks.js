@@ -139,4 +139,104 @@ router.get("/history", auth, async (req, res) => {
   }
 });
 
+// ARCHIVE task → move from Task → History
+router.post("/:id/archive", auth, async (req, res) => {
+  try {
+    const task = await Task.findOne({ _id: req.params.id, userId: req.user._id });
+    if (!task) return res.status(404).json({ error: "Task not found" });
+
+    // Save to history
+    const history = new History({
+      userId: req.user._id,
+      title: task.title,
+      description: task.description,
+      dueAt: task.dueAt,
+      archivedAt: new Date(),
+      completedAt: task.completedAt || null,
+      status: task.status
+    });
+    await history.save();
+
+    // Remove from active tasks
+    await Task.deleteOne({ _id: task._id, userId: req.user._id });
+
+    // Optional: reward archiving with +1 point
+    await User.findByIdAndUpdate(req.user._id, { $inc: { points: 1 } });
+
+    res.json({ ok: true, history });
+  } catch (err) {
+    console.error("Archive error:", err);
+    res.status(500).json({ error: "Failed to archive task" });
+  }
+});
+
+// UNARCHIVE task → move back from History → Task
+router.post("/:id/unarchive", auth, async (req, res) => {
+  try {
+    const history = await History.findOne({ _id: req.params.id, userId: req.user._id });
+    if (!history) return res.status(404).json({ error: "History item not found" });
+
+    // Recreate task with same status
+    const task = new Task({
+      userId: req.user._id,
+      title: history.title,
+      description: history.description,
+      dueAt: history.dueAt,
+      completedAt: history.completedAt,
+      status: history.status || "created",
+      updatedAt: new Date()
+    });
+    await task.save();
+
+    // Remove from history
+    await History.deleteOne({ _id: history._id });
+
+    res.json({ ok: true, task });
+  } catch (err) {
+    console.error("Unarchive error:", err);
+    res.status(500).json({ error: "Failed to unarchive task" });
+  }
+});
+
+// ADVANCE one phase
+router.post("/:id/advance", auth, async (req, res) => {
+  try {
+    const task = await Task.findOne({
+      _id: req.params.id,
+      userId: req.user._id,
+    });
+    if (!task) return res.status(404).json({ error: "Task not found" });
+
+    const idx = STEPS.indexOf(task.status);
+    if (idx === -1 || idx === STEPS.length - 1) return res.json({ task });
+
+    const next = STEPS[idx + 1];
+    task.status = next;
+    task.updatedAt = new Date();
+
+    let inc = 1;
+    if (next === "completed") {
+      task.completedAt = new Date();
+      inc = 4;
+    }
+
+    task.pointsAwarded = (task.pointsAwarded || 0) + inc;
+    await task.save();
+
+    // ✅ Update and return latest user
+    const user = await User.findByIdAndUpdate(
+      req.user._id,
+      { $inc: { points: inc } },
+      { new: true }
+    );
+
+    res.json({ task, user });   // return both
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "server error" });
+  }
+});
+
+ 
 module.exports = router;
+9

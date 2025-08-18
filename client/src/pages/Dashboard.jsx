@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import api, { API_BASE } from "../lib/api";
+import api from "../lib/api";
 import { Clock3, Trophy, Newspaper, ListChecks } from "lucide-react";
 import TechNews from "../components/TechNews";
 
@@ -9,6 +9,7 @@ export default function Dashboard() {
   const [name, setName] = useState("");
   const [profilePic, setProfilePic] = useState(null);
 
+  // Fetch tasks
   useEffect(() => {
     (async () => {
       try {
@@ -20,20 +21,22 @@ export default function Dashboard() {
     })();
   }, []);
 
+  // Fetch latest user info (points, name, profilePic)
   useEffect(() => {
-  try {
-    const uRaw = localStorage.getItem("user");
-    if (uRaw) {
-      const u = JSON.parse(uRaw);
-      setPoints(u.points || 0);
-      setName(u.firstName || u.username || "");
-     if (u.profilePic) setProfilePic(u.profilePic); 
-    }
-  } catch {}
-}, []);
+    (async () => {
+      try {
+        const u = await api.get("/users/me");
+        setPoints(u.data.points || 0);
+        setName(u.data.firstName || u.data.username || "");
+        if (u.data.profilePic) setProfilePic(u.data.profilePic);
 
-
-  
+        // Optional: keep localStorage in sync (but not mandatory)
+        localStorage.setItem("user", JSON.stringify(u.data));
+      } catch (err) {
+        console.error("Failed to fetch user", err);
+      }
+    })();
+  }, []);
 
   const pending = tasks.filter((t) => t.status !== "completed");
 

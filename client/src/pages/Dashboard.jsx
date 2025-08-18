@@ -2,41 +2,70 @@ import React, { useEffect, useState } from "react";
 import api from "../lib/api";
 import { Clock3, Trophy, Newspaper, ListChecks } from "lucide-react";
 import TechNews from "../components/TechNews";
+import { toast } from "react-hot-toast";
+import Loading from "../components/Loading";
+import SkeletonCard from "../components/SkeletonCard";
 
 export default function Dashboard() {
   const [tasks, setTasks] = useState([]);
   const [points, setPoints] = useState(0);
   const [name, setName] = useState("");
   const [profilePic, setProfilePic] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  // Fetch tasks
+  // Fetch tasks + user
   useEffect(() => {
     (async () => {
       try {
-        const t = await api.get("/tasks");
+         const t = await api.get("/tasks");
+         const u = await api.get("/users/me");
+
         setTasks(t.data || []);
-      } catch (err) {
-        console.error("Failed to fetch tasks", err);
-      }
-    })();
-  }, []);
-
-  // Fetch latest user info (points, name, profilePic)
-  useEffect(() => {
-    (async () => {
-      try {
-        const u = await api.get("/users/me");
         setPoints(u.data.points || 0);
         setName(u.data.firstName || u.data.username || "");
-        if (u.data.profilePic) setProfilePic(u.data.profilePic);
+        setProfilePic(u.data.profilePic || null);
 
-        // Optional: keep localStorage in sync (but not mandatory)
         localStorage.setItem("user", JSON.stringify(u.data));
       } catch (err) {
-        console.error("Failed to fetch user", err);
+        console.error("Failed to fetch dashboard data", err);
+        toast.error("Failed to load dashboard");
+      } finally {
+        setLoading(false);
       }
     })();
   }, []);
+
+  async function advance(t) {
+    try {
+      const res = await api.post(`/api/tasks/${t._id}/advance`);
+      const { task, user } = res.data;
+
+      setTasks((ts) => ts.map((x) => (x._id === task._id ? task : x)));
+      setPoints(user.points || 0);
+      setProfilePic(user.profilePic || null);
+
+      toast.success(
+        task.status === "completed"
+          ? `🎉 Task "${task.title}" completed!`
+          : `Task moved to ${task.status}`
+      );
+    } catch {
+      toast.error("Failed to advance");
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="max-w-6xl mx-auto px-3 sm:px-4 lg:px-6">
+        <Loading text="Loading your dashboard..." />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
+          <SkeletonCard />
+          <SkeletonCard />
+          <SkeletonCard />
+        </div>
+      </div>
+    );
+  }
 
   const pending = tasks.filter((t) => t.status !== "completed");
 
@@ -59,8 +88,8 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Top Stats Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mb-5 sm:mb-6">
+      {/* Stats Row */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
         {/* Today */}
         <div className="bg-white dark:bg-neutral-900 border dark:border-neutral-800 rounded-xl p-4 shadow-sm">
           <div className="flex items-center gap-2 font-semibold text-sm sm:text-base">
@@ -101,7 +130,7 @@ export default function Dashboard() {
         <TechNews />
       </div>
 
-      {/* Pending Tasks */}
+      {/* Tasks */}
       <div className="bg-white dark:bg-neutral-900 border dark:border-neutral-800 rounded-xl p-4 shadow-sm">
         <h3 className="text-base sm:text-lg font-semibold mb-3">Incomplete Tasks</h3>
         {pending.length === 0 ? (

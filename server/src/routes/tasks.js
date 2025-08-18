@@ -45,35 +45,7 @@ router.get("/", auth, async (req, res) => {
   }
 });
 
-// ADVANCE one phase
-router.post("/:id/advance", auth, async (req, res) => {
-  try {
-    const task = await Task.findOne({
-      _id: req.params.id,
-      userId: req.user._id,
-    });
-    if (!task) return res.status(404).json({ error: "Task not found" });
 
-    const idx = STEPS.indexOf(task.status);
-    if (idx === -1 || idx === STEPS.length - 1) return res.json(task);
-
-    const next = STEPS[idx + 1];
-    task.status = next;
-    task.updatedAt = new Date();
-
-    let inc = 1;
-    if (next === "completed") inc = 4;
-
-    task.pointsAwarded = (task.pointsAwarded || 0) + inc;
-    await task.save();
-    await User.findByIdAndUpdate(req.user._id, { $inc: { points: inc } });
-
-    res.json(task);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "server error" });
-  }
-});
 
 // REDO
 router.post("/:id/redo", auth, async (req, res) => {
@@ -199,6 +171,35 @@ router.post("/:id/unarchive", auth, async (req, res) => {
 });
 
 // ADVANCE one phase
+// router.post("/:id/advance", auth, async (req, res) => {
+//   try {
+//     const task = await Task.findOne({
+//       _id: req.params.id,
+//       userId: req.user._id,
+//     });
+//     if (!task) return res.status(404).json({ error: "Task not found" });
+
+//     const idx = STEPS.indexOf(task.status);
+//     if (idx === -1 || idx === STEPS.length - 1) return res.json(task);
+
+//     const next = STEPS[idx + 1];
+//     task.status = next;
+//     task.updatedAt = new Date();
+
+//     let inc = 1;
+//     if (next === "completed") inc = 4;
+
+//     task.pointsAwarded = (task.pointsAwarded || 0) + inc;
+//     await task.save();
+//     await User.findByIdAndUpdate(req.user._id, { $inc: { points: inc } });
+
+//     res.json(task);
+//   } catch (err) {
+//     console.error(err);
+//     res.status(500).json({ error: "server error" });
+//   }
+// });
+// ✅ Advance one phase (points + checkpoint update)
 router.post("/:id/advance", auth, async (req, res) => {
   try {
     const task = await Task.findOne({
@@ -223,20 +224,19 @@ router.post("/:id/advance", auth, async (req, res) => {
     task.pointsAwarded = (task.pointsAwarded || 0) + inc;
     await task.save();
 
-    // ✅ Update and return latest user
+    // ✅ Update user points and return user
     const user = await User.findByIdAndUpdate(
       req.user._id,
       { $inc: { points: inc } },
       { new: true }
-    );
+    ).select("-password");
 
-    res.json({ task, user });   // return both
+    res.json({ task, user }); // return both
   } catch (err) {
-    console.error(err);
+    console.error("Advance error:", err);
     res.status(500).json({ error: "server error" });
   }
 });
 
  
 module.exports = router;
-9

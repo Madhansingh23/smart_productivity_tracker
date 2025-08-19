@@ -41,11 +41,12 @@ app.use(
   })
 );
 
-// Ensure OPTIONS preflight always works
+// respond to all preflight requests
 app.options("*", cors({
   origin: allowedOrigins,
   credentials: true,
 }));
+
 
 app.use((req, res, next) => {
   console.log("Request Origin:", req.headers.origin);

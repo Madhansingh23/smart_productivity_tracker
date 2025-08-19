@@ -2,18 +2,14 @@ services:
   - type: web
     name: smart-productivity-server
     env: node
-    region: oregon    # or closest to you, Render free tier is usually Oregon
+    region: oregon
     plan: free
-
-    rootDir: server   # <--- important, backend is inside /server
+    rootDir: server
     buildCommand: npm install
     startCommand: npm start
-
     envVars:
       - key: NODE_VERSION
         value: 18
-
-      # These must match your local .env but do NOT commit them
       - key: PORT
         value: 5000
       - key: MONGO_URI

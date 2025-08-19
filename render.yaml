@@ -2,8 +2,6 @@ services:
   - type: web
     name: smart-productivity-server
     env: node
-    region: oregon
-    plan: free
     rootDir: server
     buildCommand: npm install
     startCommand: npm start

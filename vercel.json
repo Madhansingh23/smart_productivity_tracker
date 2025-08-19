@@ -1,23 +1,10 @@
-// {
-//   "version": 2,
-//   "routes": [
-//     {
-//       "src": "/api/(.*)",
-//       "dest": "https://smart-productivity-tracker-wmg1.onrender.com/api/$1"
-//     },
-//     {
-//       "src": "/(.*)",
-//       "dest": "/index.html"
-//     }
-//   ]
-// }
 {
   "version": 2,
-  "projects": [],
   "builds": [
     {
       "src": "client/package.json",
-      "use": "@vercel/static-build"
+      "use": "@vercel/static-build",
+      "config": { "distDir": "dist" }
     }
   ],
   "routes": [
@@ -27,7 +14,7 @@
     },
     {
       "src": "/(.*)",
-      "dest": "/index.html"
+      "dest": "/client/dist/index.html"
     }
   ]
 }

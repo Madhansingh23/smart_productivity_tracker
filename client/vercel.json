@@ -6,17 +6,18 @@
       "src": "client/package.json",
       "use": "@vercel/static-build",
       "config": {
-        "distDir": "client/dist"
+        "distDir": "dist"
       }
     }
   ],
   "routes": [
     {
-      "handle": "filesystem"
+      "src": "/api/(.*)",
+      "dest": "https://smart-productivity-tracker-wmg1.onrender.com/api/$1"
     },
     {
-      "src": "/.*",
-      "dest": "/client/dist/index.html"
+      "src": "/(.*)",
+      "dest": "/index.html"
     }
   ]
 }

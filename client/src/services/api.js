@@ -1,3 +1,4 @@
+// services/api.js
 import axios from 'axios';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
@@ -17,7 +18,10 @@ export const getProfile = (username) =>
 
 export const uploadProfilePic = (formData, token) =>
   api.post('/profile/upload-pic', formData, {
-    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' }
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'multipart/form-data'
+    }
   });
 
 export default api;

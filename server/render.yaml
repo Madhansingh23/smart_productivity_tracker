@@ -2,10 +2,18 @@ services:
   - type: web
     name: smart-productivity-server
     env: node
+    region: oregon    # or closest to you, Render free tier is usually Oregon
     plan: free
-    buildCommand: "npm install"
-    startCommand: "npm start"
+
+    rootDir: server   # <--- important, backend is inside /server
+    buildCommand: npm install
+    startCommand: npm start
+
     envVars:
+      - key: NODE_VERSION
+        value: 18
+
+      # These must match your local .env but do NOT commit them
       - key: PORT
         value: 5000
       - key: MONGO_URI
@@ -14,14 +22,12 @@ services:
         sync: false
       - key: OPENAI_KEY
         sync: false
-      - key: YOUTUBE_API_KEY
-        sync: false
       - key: SMTP_HOST
-        value: smtp.gmail.com
+        sync: false
       - key: SMTP_PORT
-        value: "465"
+        sync: false
       - key: SMTP_SECURE
-        value: "true"
+        sync: false
       - key: SMTP_USER
         sync: false
       - key: SMTP_PASS

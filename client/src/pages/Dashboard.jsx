@@ -20,7 +20,7 @@ export default function Dashboard() {
          const t = await api.get("/tasks");
          const u = await api.get("/users/me");
 
-        setTasks(t.data || []);
+        setTasks(Array.isArray(t.data) ? t.data : (t.data.tasks || []));
         setPoints(u.data.points || 0);
         setName(u.data.firstName || u.data.username || "");
         setProfilePic(u.data.profilePic || null);

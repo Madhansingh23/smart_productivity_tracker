@@ -7,13 +7,20 @@ export default function HistoryPage() {
   const [history, setHistory] = useState([]);
 
   async function load() {
-    try {
-      const res = await api.get("/tasks/history");
-      setHistory(res.data || []);
-    } catch {
-      toast.error("Failed to load history");
+  try {
+    const res = await api.get("/tasks/history");
+
+    if (Array.isArray(res.data)) {
+      setHistory(res.data);
+    } else {
+      setHistory([]); // fallback if backend sends something unexpected
     }
+  } catch {
+    toast.error("Failed to load history");
+    setHistory([]); // fallback on error
   }
+}
+
 
   async function unarchive(item) {
     try {
@@ -32,7 +39,7 @@ export default function HistoryPage() {
   return (
     <div className="max-w-5xl mx-auto p-4 text-neutral-900 dark:text-neutral-100">
       <h2 className="text-xl font-bold mb-4">📦 Archived Tasks</h2>
-      {history.length === 0 ? (
+      {Array.isArray(history) && history.length === 0 ? (
         <p className="text-neutral-500">No archived tasks</p>
       ) : (
         <ul className="space-y-3">

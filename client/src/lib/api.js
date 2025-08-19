@@ -2,7 +2,7 @@
 import axios from 'axios';
 
 // Use the env or fallback to local dev
-export const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+export const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/';
 
 // Single axios instance
 const api = axios.create({ baseURL: API_BASE });
@@ -22,13 +22,17 @@ export async function getTasksFast() {
   if (cached) {
     // background refresh
     api.get('/tasks')
-      .then(r => localStorage.setItem(CACHE_KEY, JSON.stringify(r.data)))
+      .then(r => {
+       const tasks = Array.isArray(r.data) ? r.data : (r.data.tasks || []);
+       localStorage.setItem(CACHE_KEY, JSON.stringify(tasks));
+     })
       .catch(() => {});
     return JSON.parse(cached);
   }
   const r = await api.get('/tasks');
-  localStorage.setItem(CACHE_KEY, JSON.stringify(r.data));
-  return r.data;
+  const tasks = Array.isArray(r.data) ? r.data : (r.data.tasks || []);
+  localStorage.setItem(CACHE_KEY, JSON.stringify(tasks));
+  return tasks;
 }
 
 export function invalidateTasksCache() {

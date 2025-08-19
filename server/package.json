@@ -4,7 +4,7 @@
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",
-    "dev": "npx nodemon src/index.js",
+    "dev": "nodemon src/index.js",
     "seed": "node src/scripts/seed.js"
   },
   "dependencies": {
@@ -20,9 +20,7 @@
     "multer": "^2.0.2",
     "node-cron": "^3.0.3",
     "nodemailer": "^6.10.1",
-    "openai": "^4.7.0",
-    "react-player": "^3.3.1",
-    "render": "^0.1.4"
+    "openai": "^4.7.0"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"

@@ -19,8 +19,39 @@ const userRoutes = require("./routes/users");
 
 const app = express();
 
-// CORS & basics
-app.use(cors({ origin: true, credentials: true }));
+const allowedOrigins = [
+  "http://localhost:3000",
+  "http://127.0.0.1:3000",
+  "https://smart-productivity-client.vercel.app"
+];
+
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true); // allow server-to-server/curl
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      console.warn("Blocked by CORS:", origin);
+      return callback(new Error("CORS not allowed"), false);
+    },
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
+
+// Ensure OPTIONS preflight always works
+app.options("*", cors({
+  origin: allowedOrigins,
+  credentials: true,
+}));
+
+app.use((req, res, next) => {
+  console.log("Request Origin:", req.headers.origin);
+  next();
+});
+
 app.use(helmet());
 app.use(compression());
 app.use(express.json({ limit: '1mb' }));

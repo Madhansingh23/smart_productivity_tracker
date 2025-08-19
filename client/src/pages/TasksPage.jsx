@@ -24,7 +24,9 @@ export default function TasksPage() {
   async function load() {
     setLoading(true);
     try {
-      setTasks(await getTasksFast());
+      // setTasks(await getTasksFast());
+      const data = await getTasksFast();
+      setTasks(Array.isArray(data) ? data : (data.tasks || []));
     } finally {
       setLoading(false);
     }
@@ -37,7 +39,8 @@ export default function TasksPage() {
     e.preventDefault();
     try {
       const res = await api.post("/tasks", newTask);
-      setTasks([res.data, ...tasks]);
+      // setTasks([res.data, ...tasks]);
+      setTasks((ts) => [res.data, ...(Array.isArray(ts) ? ts : [])]);
       setNewTask({ title: "", description: "", dueAt: "", remindAt: "" });
       invalidateTasksCache();
       toast.success("Task created successfully!");

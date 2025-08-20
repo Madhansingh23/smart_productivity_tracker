@@ -1,6 +1,7 @@
 // src/index.js
 require('dotenv').config();
 
+
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
@@ -22,8 +23,9 @@ const app = express();
 const allowedOrigins = [
   "http://localhost:3000",
   "http://127.0.0.1:3000",
-  "https://smart-productivity-client.vercel.app"
+  "https://smart-productivity-tracker-blush.vercel.app" // ✅ your deployed frontend
 ];
+
 
 app.use(
   cors({

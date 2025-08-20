@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from "react";
 import api, { API_BASE } from "../lib/api.js"; // import API_BASE
 import { useAuth } from "../context/AuthContext.jsx";
+import Loading from "../components/Loading.jsx";
+import SkeletonCard from "../components/SkeletonCard.jsx";
+
 
 export default function Profilepage() {
   const { user, setUser } = useAuth();
@@ -10,21 +13,37 @@ export default function Profilepage() {
   const [availability, setAvailability] = useState({});
   const [profilePicFile, setProfilePicFile] = useState(null);
   const [loading, setLoading] = useState(false);
+  
 
   // Fetch user profile
-  useEffect(() => {
-    async function fetchProfile() {
-      try {
-        const res = await api.get("/profile/me");
-        setFormData(res.data);
-      } catch (err) {
-        console.error("Failed to fetch profile:", err);
-      }
+useEffect(() => {
+  async function fetchProfile() {
+    try {
+      setLoading(true); // <-- add this
+      const res = await api.get("/profile/me");
+      setFormData(res.data);
+    } catch (err) {
+      console.error("Failed to fetch profile:", err);
+    } finally {
+      setLoading(false); // <-- add this
     }
-    fetchProfile();
-  }, []);
+  }
+  fetchProfile();
+}, []);
 
-  if (!formData) return <div className="p-6 text-gray-700">Loading...</div>;
+
+if (loading || !formData) {
+  return (
+    <div className="max-w-2xl mx-auto px-3 sm:px-4 lg:px-6">
+      <Loading text="Loading your profile..." />
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
+        <SkeletonCard />
+        <SkeletonCard />
+      </div>
+    </div>
+  );
+}
+
 
   // Handle input
   const handleChange = (e) => {

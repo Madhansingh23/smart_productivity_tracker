@@ -2,7 +2,7 @@
 import axios from 'axios';
 
 // Use the env or fallback to local dev
-export const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/';
+export const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 // Single axios instance
 const api = axios.create({ baseURL: API_BASE });

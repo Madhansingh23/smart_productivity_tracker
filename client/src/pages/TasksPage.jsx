@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import api, { getTasksFast, invalidateTasksCache } from "../lib/api";
+import api, { getTasksFast, invalidateTasksCache } from "../lib/api.js";
 import { Trash2, RotateCcw, CheckCircle2, Archive } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
 

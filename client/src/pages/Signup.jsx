@@ -1,7 +1,7 @@
 // src/pages/Signup.jsx
 import React, { useState } from 'react';
-import api from '../lib/api';
-import { useAuth } from '../context/AuthContext';
+import api from '../lib/api.js';
+import { useAuth } from '../context/AuthContext.jsx';
 import { useNavigate } from 'react-router-dom';
 
 export default function Signup() {

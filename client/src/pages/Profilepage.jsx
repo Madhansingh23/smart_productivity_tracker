@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import api, { API_BASE } from "../lib/api"; // import API_BASE
-import { useAuth } from "../context/AuthContext";
+import api, { API_BASE } from "../lib/api.js"; // import API_BASE
+import { useAuth } from "../context/AuthContext.jsx";
 
 export default function ProfilePage() {
   const { user, setUser } = useAuth();

@@ -3,8 +3,8 @@ import api from "../lib/api";
 import { Clock3, Trophy, Newspaper, ListChecks } from "lucide-react";
 import TechNews from "../components/TechNews";
 import { toast } from "react-hot-toast";
-import Loading from "../components/Loading";
-import SkeletonCard from "../components/SkeletonCard";
+import Loading from "../components/Loading.jsx";
+import SkeletonCard from "../components/SkeletonCard.jsx";
 
 export default function Dashboard() {
   const [tasks, setTasks] = useState([]);

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import api from "../lib/api";
+import api from "../lib/api.js";
 import { Lightbulb, Play, Sparkles } from "lucide-react";
 
 export default function DecisionHelper() {

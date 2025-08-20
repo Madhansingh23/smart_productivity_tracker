@@ -1,16 +1,16 @@
 // src/App.jsx
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider, useAuth } from './context/AuthContext';
-import { ThemeProvider } from './context/ThemeContext';
-import SidebarLayout from './components/SidebarLayout';
-import Login from './pages/Login';
-import Signup from './pages/Signup';
-import Dashboard from './pages/Dashboard';
-import DecisionHelper from './pages/DecisionHelper';
-import TasksPage from './pages/TasksPage';
-import ProfilePage from './pages/ProfilePage';
-import HistoryPage from './pages/HistoryPage';
+import { AuthProvider, useAuth } from './context/AuthContext.jsx';
+import { ThemeProvider } from './context/ThemeContext.jsx';
+import SidebarLayout from './components/SidebarLayout.jsx';
+import Login from './pages/Login.jsx';
+import Signup from './pages/Signup.jsx';
+import Dashboard from './pages/Dashboard.jsx';
+import DecisionHelper from './pages/DecisionHelper.jsx';
+import TasksPage from './pages/TasksPage.jsx';
+import ProfilePage from './pages/ProfilePage.jsx';
+import HistoryPage from './pages/HistoryPage.jsx';
 function PrivateRoute({ children }) {
   const { user } = useAuth();
   return user ? children : <Navigate to="/login" replace />;

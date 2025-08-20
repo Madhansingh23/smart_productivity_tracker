@@ -1,8 +1,8 @@
 // src/pages/Login.jsx
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import api from '../lib/api';
-import { useAuth } from '../context/AuthContext';
+import api from '../lib/api.js';
+import { useAuth } from '../context/AuthContext.jsx';
 
 export default function Login(){
   const [identifier,setIdentifier]=useState('');

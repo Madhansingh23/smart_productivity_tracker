@@ -1,23 +1,26 @@
+// routes/contact.js
 const express = require("express");
 const router = express.Router();
 const { sendMail } = require("../utils/mailer");
+const auth = require("../middleware/auth");  // ✅ your JWT auth middleware
+const User = require("../models/User");      // ✅ your MongoDB User model
 
-router.post("/", async (req, res) => {
+// Only message is needed, user is signed in
+router.post("/", auth, async (req, res) => {
   try {
-    const { message, name, email } = req.body;
-    const user = req.user || {}; // fallback if not logged in
-
+    const { message } = req.body;
     if (!message) return res.status(400).json({ error: "Message required" });
 
-    const senderName = user.firstName || user.username || name || "Anonymous";
-    const senderEmail = user.email || email || "unknown";
+    // Get user details from MongoDB using req.user.id
+    const user = await User.findById(req.user.id).select("username email");
+    if (!user) return res.status(404).json({ error: "User not found" });
 
     await sendMail({
       to: "t.madhansingh23@gmail.com",
-      subject: `New Contact Message from ${senderName}`,
+      subject: `New Contact Message from ${user.username}`,
       html: `
-        <p><b>Name:</b> ${senderName}</p>
-        <p><b>Email:</b> ${senderEmail}</p>
+        <p><b>Name:</b> ${user.username}</p>
+        <p><b>Email:</b> ${user.email}</p>
         <p><b>Message:</b></p>
         <p>${message}</p>
       `,

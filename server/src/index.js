@@ -17,6 +17,7 @@ const suggestionsRoutes = require('./routes/suggestions');
 const aiRoutes = require('./routes/ai');
 const profileRoutes = require('./routes/profile');
 const userRoutes = require("./routes/users");
+const conatctRoutes = require("./routes/contact");
 
 
 const app = express();
@@ -77,6 +78,7 @@ app.use('/api/suggestions', suggestionsRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/profile', profileRoutes);
 app.use("/api/users", userRoutes); 
+app.use("/api/contact", conatctRoutes);
 
 
 // health

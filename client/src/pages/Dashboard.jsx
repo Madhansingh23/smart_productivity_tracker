@@ -38,7 +38,7 @@ export default function Dashboard() {
 
   async function advance(t) {
     try {
-      const res = await api.post(`/api/tasks/${t._id}/advance`);
+      const res = await api.post(`/tasks/${t._id}/advance`);
       const { task, user } = res.data;
 
       setTasks((ts) => ts.map((x) => (x._id === task._id ? task : x)));

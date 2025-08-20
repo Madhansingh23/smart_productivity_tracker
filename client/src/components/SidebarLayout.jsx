@@ -3,11 +3,12 @@ import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
 import {
-  Sun, Moon, LogOut, Menu, X,
+  Sun, Moon, LogOut, Menu, X,Mail,
   LayoutDashboard, ClipboardList, Star, User, Archive
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { io } from "socket.io-client";   // ✅ add
+import api from "../lib/api.js"
 
 export default function SidebarLayout({ children }) {
   const { user, setToken, setUser } = useAuth();
@@ -22,15 +23,17 @@ export default function SidebarLayout({ children }) {
     { to: "/decision-helper", label: "Decision Helper", icon: <Star size={18} /> },
     { to: "/history", label: "History", icon: <Archive size={18} /> },
     { to: `/profile/${user?.username}`, label: "Profile", icon: <User size={18} /> },
+    { to: "/contact", label: "Contact", icon: <Mail size={18} /> },
+
   ];
 
-  // Initial fetch
-  useEffect(() => {
-    fetch("/api/tasks/history", { credentials: "include" })
-      .then((res) => res.json())
-      .then((data) => setHistoryCount(data.length || 0))
-      .catch(() => setHistoryCount(0));
-  }, []);
+  // ✅ Initial fetch
+useEffect(() => {
+  api.get("/tasks/history")
+    .then((res) => setHistoryCount(res.data.length || 0))
+    .catch(() => setHistoryCount(0));
+}, []);
+
 
   // ✅ Live updates with WebSocket
   useEffect(() => {

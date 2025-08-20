@@ -18,6 +18,7 @@ const aiRoutes = require('./routes/ai');
 const profileRoutes = require('./routes/profile');
 const userRoutes = require("./routes/users");
 
+
 const app = express();
 
 const allowedOrigins = [

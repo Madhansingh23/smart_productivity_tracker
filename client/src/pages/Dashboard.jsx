@@ -12,6 +12,7 @@ export default function Dashboard() {
   const [name, setName] = useState("");
   const [profilePic, setProfilePic] = useState(null);
   const [loading, setLoading] = useState(true);
+  
 
   // Fetch tasks + user
   useEffect(() => {

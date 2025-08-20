@@ -6,6 +6,7 @@ export default function DecisionHelper() {
   const [query, setQuery] = useState("");
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   const starterPrompts = [
     "I feel overwhelmed. How do I prioritize today?",
@@ -17,11 +18,17 @@ export default function DecisionHelper() {
   async function submit() {
     if (!query.trim()) return;
     setLoading(true);
+    setError(null);
     try {
       const res = await api.post("/ai/suggest", { notes: query });
       setResult(res.data);
     } catch (e) {
-      alert("Error: " + (e.response?.data?.error || e.message));
+      if (e.response?.status === 503) {
+        setResult(e.response.data); // still show fallback videos
+        setError(e.response.data.error);
+      } else {
+        setError("Unexpected error: " + (e.response?.data?.error || e.message));
+      }
     } finally {
       setLoading(false);
     }
@@ -101,6 +108,11 @@ export default function DecisionHelper() {
             <section>
               <h3 className="text-lg font-semibold mb-3">Suggestions</h3>
               <div className="grid md:grid-cols-2 gap-4">
+                {error && (
+                  <div className="mt-4 p-3 bg-red-100 text-red-700 border border-red-300 rounded">
+                    {error}
+                  </div>
+                )}
                 {result.suggestions.map((s, i) => (
                   <div
                     key={i}
@@ -111,6 +123,44 @@ export default function DecisionHelper() {
                     </div>
                   </div>
                 ))}
+              </div>
+            </section>
+          )}
+
+          {/* ✅ YouTube video section */}
+          {result?.videos?.length > 0 && (
+            <section className="mt-6">
+              <h3 className="text-lg font-semibold mb-3">Recommended Videos</h3>
+              <div className="grid md:grid-cols-2 gap-4">
+                {result.videos.map((v, i) => {
+                  const videoId = v.url.split("v=")[1];
+                  return (
+                    <div
+                      key={i}
+                      className="bg-white dark:bg-neutral-900 border dark:border-neutral-800 rounded-xl p-4 shadow-sm"
+                    >
+                      <p className="font-medium mb-2">{v.title}</p>
+                      {videoId ? (
+                        <iframe
+                          className="w-full aspect-video rounded"
+                          src={`https://www.youtube.com/embed/${videoId}`}
+                          title={v.title}
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allowFullScreen
+                        ></iframe>
+                      ) : (
+                        <a
+                          href={v.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:underline"
+                        >
+                          Watch on YouTube
+                        </a>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </section>
           )}

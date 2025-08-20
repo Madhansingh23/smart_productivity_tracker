@@ -9,7 +9,7 @@ import Signup from './pages/Signup.jsx';
 import Dashboard from './pages/Dashboard.jsx';
 import DecisionHelper from './pages/DecisionHelper.jsx';
 import TasksPage from './pages/TasksPage.jsx';
-import ProfilePage from './pages/ProfilePage.jsx';
+import ProfilePage from './pages/Profilepage.jsx';
 import HistoryPage from './pages/HistoryPage.jsx';
 function PrivateRoute({ children }) {
   const { user } = useAuth();

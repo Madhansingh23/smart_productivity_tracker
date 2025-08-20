@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import api, { API_BASE } from "../lib/api.js"; // import API_BASE
 import { useAuth } from "../context/AuthContext.jsx";
 
-export default function ProfilePage() {
+export default function Profilepage() {
   const { user, setUser } = useAuth();
 
   const [formData, setFormData] = useState(null);

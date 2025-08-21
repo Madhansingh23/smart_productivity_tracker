@@ -12,6 +12,9 @@ import TasksPage from './pages/TasksPage.jsx';
 import ProfilePage from './pages/Profilepage.jsx';
 import HistoryPage from './pages/HistoryPage.jsx';
 import Contact from './pages/Contact.jsx';
+import Error from './pages/Error.jsx';
+import Sudoku from './pages/Sudoku.jsx';
+
 function PrivateRoute({ children }) {
   const { user } = useAuth();
   return user ? children : <Navigate to="/login" replace />;
@@ -32,7 +35,10 @@ export default function App() {
             <Route path="/history" element={<PrivateRoute><SidebarLayout><HistoryPage /></SidebarLayout></PrivateRoute>}  />
             <Route path="/profile/:username" element={<PrivateRoute><SidebarLayout><ProfilePage/></SidebarLayout></PrivateRoute>} />
             <Route path="/contact" element={<PrivateRoute><SidebarLayout><Contact /></SidebarLayout></PrivateRoute>}  />
-            <Route path="*" element={<Navigate to="/login" replace />} />
+
+            <Route path="/error" element={<Error />} />
+            <Route path="/sudoku" element={<Sudoku />} />
+            <Route path="*" element={<Navigate to="/error" replace />} />
           </Routes>
         </BrowserRouter>
       </AuthProvider>

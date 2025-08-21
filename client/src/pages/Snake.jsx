@@ -15,7 +15,7 @@ export default function Snake() {
   const getCanvasSize = () => {
     const isMobile = window.innerWidth < 768;
     return isMobile
-      ? { width: 350, height: 600 }
+      ? { width: 350, height: 450 }
       : { width: 1100, height: 500 };
   };
   const [{ width, height }, setCanvasSize] = useState(getCanvasSize);
@@ -83,51 +83,6 @@ export default function Snake() {
     };
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
-  }, [running]);
-
-  // ✅ Touch controls for mobile
-  useEffect(() => {
-    let startX = 0,
-      startY = 0;
-    const threshold = 30; // min swipe distance
-
-    const handleTouchStart = (e) => {
-      const t = e.touches[0];
-      startX = t.clientX;
-      startY = t.clientY;
-    };
-
-    const handleTouchEnd = (e) => {
-      if (!running) return;
-      const t = e.changedTouches[0];
-      const dxSwipe = t.clientX - startX;
-      const dySwipe = t.clientY - startY;
-
-      if (Math.abs(dxSwipe) > Math.abs(dySwipe)) {
-        // horizontal swipe
-        if (dxSwipe > threshold && snakeRef.current.dx === 0) {
-          snakeRef.current = { ...snakeRef.current, dx: scale, dy: 0 }; // right
-        } else if (dxSwipe < -threshold && snakeRef.current.dx === 0) {
-          snakeRef.current = { ...snakeRef.current, dx: -scale, dy: 0 }; // left
-        }
-      } else {
-        // vertical swipe
-        if (dySwipe > threshold && snakeRef.current.dy === 0) {
-          snakeRef.current = { ...snakeRef.current, dx: 0, dy: scale }; // down
-        } else if (dySwipe < -threshold && snakeRef.current.dy === 0) {
-          snakeRef.current = { ...snakeRef.current, dx: 0, dy: -scale }; // up
-        }
-      }
-    };
-
-    const canvas = canvasRef.current;
-    canvas.addEventListener("touchstart", handleTouchStart);
-    canvas.addEventListener("touchend", handleTouchEnd);
-
-    return () => {
-      canvas.removeEventListener("touchstart", handleTouchStart);
-      canvas.removeEventListener("touchend", handleTouchEnd);
-    };
   }, [running]);
 
   // Game loop
@@ -225,7 +180,7 @@ export default function Snake() {
     ctx.fill();
     ctx.restore();
 
-    // Snake drawing (unchanged from your version)
+    // Snake drawing
     const body = snakeRef.current.body;
     const { dx, dy } = snakeRef.current;
 
@@ -281,6 +236,16 @@ export default function Snake() {
     }
   };
 
+  // ✅ Mobile buttons for controls
+  const handleMove = (dir) => {
+    const { dx, dy } = snakeRef.current;
+    if (!running) return;
+    if (dir === "up" && dy === 0) snakeRef.current = { ...snakeRef.current, dx: 0, dy: -scale };
+    if (dir === "down" && dy === 0) snakeRef.current = { ...snakeRef.current, dx: 0, dy: scale };
+    if (dir === "left" && dx === 0) snakeRef.current = { ...snakeRef.current, dx: -scale, dy: 0 };
+    if (dir === "right" && dx === 0) snakeRef.current = { ...snakeRef.current, dx: scale, dy: 0 };
+  };
+
   return (
     <div className={`${wrapperClass} flex flex-col items-center gap-4`}>
       <h1 className="text-2xl font-bold">🐍 Snake Game</h1>
@@ -309,6 +274,35 @@ export default function Snake() {
         className="rounded-2xl shadow-md border border-neutral-300 dark:border-neutral-800 bg-neutral-50 dark:bg-black w-full"
         style={{ maxWidth: `${width}px`, height: `${height}px` }}
       />
+      {/* ✅ Mobile D-Pad */}
+      <div className="sm:hidden mt-4 flex flex-col items-center gap-2">
+        <button
+          onClick={() => handleMove("up")}
+          className="w-16 h-16 rounded-full bg-blue-500 text-white text-xl shadow-md active:bg-blue-600"
+        >
+          ↑
+        </button>
+        <div className="flex gap-10">
+          <button
+            onClick={() => handleMove("left")}
+            className="w-16 h-16 rounded-full bg-blue-500 text-white text-xl shadow-md active:bg-blue-600"
+          >
+            ←
+          </button>
+          <button
+            onClick={() => handleMove("right")}
+            className="w-16 h-16 rounded-full bg-blue-500 text-white text-xl shadow-md active:bg-blue-600"
+          >
+            →
+          </button>
+        </div>
+        <button
+          onClick={() => handleMove("down")}
+          className="w-16 h-16 rounded-full bg-blue-500 text-white text-xl shadow-md active:bg-blue-600"
+        >
+          ↓
+        </button>
+      </div>
     </div>
   );
 }

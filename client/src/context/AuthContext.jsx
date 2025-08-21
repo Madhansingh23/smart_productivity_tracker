@@ -32,6 +32,7 @@ export function AuthProvider({children}) {
     })();
   }, [token]);
 
+
   return <AuthContext.Provider value={{token,setToken,user,setUser}}>{children}</AuthContext.Provider>;
 }
 

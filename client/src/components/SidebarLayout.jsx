@@ -4,7 +4,7 @@ import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
 import {
   Sun, Moon, LogOut, Menu, X,Mail,
-  LayoutDashboard, ClipboardList, Star, User, Archive
+  LayoutDashboard, ClipboardList, Star, User, Archive,Gamepad2
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { io } from "socket.io-client";   // ✅ add
@@ -23,8 +23,8 @@ export default function SidebarLayout({ children }) {
     { to: "/decision-helper", label: "Decision Helper", icon: <Star size={18} /> },
     { to: "/history", label: "History", icon: <Archive size={18} /> },
     { to: `/profile/${user?.username}`, label: "Profile", icon: <User size={18} /> },
+    { to: "/snake", label: "Snake Game", icon: <Gamepad2 size={18} /> }, 
     { to: "/contact", label: "Contact", icon: <Mail size={18} /> },
-
   ];
 
   // ✅ Initial fetch

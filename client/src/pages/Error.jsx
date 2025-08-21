@@ -173,13 +173,7 @@ export default function ErrorPage() {
   >
     Go to Login
   </Link>
-  <Link
-    to="/sudoku"
-    className="px-4 py-2 sm:px-5 sm:py-2 rounded-full text-sm sm:text-base font-semibold text-white 
-    bg-gradient-to-r from-emerald-500 to-cyan-500 hover:scale-105 transform transition shadow-md"
-  >
-    Play Sudoku
-  </Link>
+
 </div>
 
       </div>

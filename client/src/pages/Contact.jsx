@@ -26,11 +26,11 @@ export default function Contact() {
   }
 
   const socials = [
-    { icon: <Linkedin />, url: "https://linkedin.com/in/madhansingh" },
-    { icon: <Github />, url: "https://github.com/madhansingh" },
-    { icon: <Code2 />, url: "https://leetcode.com/madhansingh" },
-    { icon: <Instagram />, url: "https://instagram.com/madhansingh" },
-    { icon: <Globe />, url: "https://madhansingh-portfolio.com" },
+    { icon: <Linkedin />, url: "https://www.linkedin.com/in/madhan-singh6382703678/" },
+    { icon: <Github />, url: "https://github.com/Madhansingh23/" },
+    { icon: <Code2 />, url: "https://leetcode.com/u/Madhansingh/" },
+    { icon: <Instagram />, url: "https://www.instagram.com/mr.darkstrange/" },
+    { icon: <Globe />, url: "https://madhan-portfolio-two.vercel.app/" },
   ];
 
   return (

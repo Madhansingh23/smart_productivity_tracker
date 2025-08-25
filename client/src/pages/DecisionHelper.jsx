@@ -166,6 +166,10 @@ export default function DecisionHelper() {
           )}
         </div>
       )}
+      {/* Footer */}
+          <footer className="mt-6 text-center text-xs opacity-70">
+            © All rights reserved by <b>Madhan Singh</b> | Call: +91 6382703678
+          </footer>
     </div>
   );
 }

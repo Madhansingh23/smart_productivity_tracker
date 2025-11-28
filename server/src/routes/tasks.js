@@ -2,6 +2,7 @@
 const express = require("express");
 const router = express.Router();
 const auth = require("../middleware/auth");
+const upload = require("../middleware/upload"); // Import upload middleware
 const Task = require("../models/Task");
 const User = require("../models/User");
 const History = require("../models/History");
@@ -11,7 +12,7 @@ const STEPS = ["created", "in-progress", "checking", "completed"];
 // CREATE task (+1 point)
 router.post("/", auth, async (req, res) => {
   try {
-    const { title, description, dueAt, remindAt } = req.body;
+    const { title, description, dueAt, remindAt, notifyAt } = req.body;
 
     const task = new Task({
       userId: req.user._id,
@@ -19,6 +20,7 @@ router.post("/", auth, async (req, res) => {
       description,
       dueAt: dueAt ? new Date(dueAt) : null,
       remindAt: remindAt ? new Date(remindAt) : null,
+      notifyAt: notifyAt ? new Date(notifyAt) : null,
       status: "created",
     });
 
@@ -32,12 +34,13 @@ router.post("/", auth, async (req, res) => {
   }
 });
 
-// GET tasks
+// GET tasks (active only)
 router.get("/", auth, async (req, res) => {
   try {
-    const tasks = await Task.find({ userId: req.user._id }).sort({
-      createdAt: -1,
-    });
+    const tasks = await Task.find({
+      userId: req.user._id,
+      isArchived: false
+    }).sort({ createdAt: -1 });
     res.json(tasks);
   } catch (err) {
     console.error(err);
@@ -45,14 +48,12 @@ router.get("/", auth, async (req, res) => {
   }
 });
 
-
-
 // REDO
 router.post("/:id/redo", auth, async (req, res) => {
   try {
     const task = await Task.findOneAndUpdate(
       { _id: req.params.id, userId: req.user._id },
-      { status: "created", updatedAt: new Date(), completedAt: null },
+      { status: "created", updatedAt: new Date(), completedAt: null, isArchived: false },
       { new: true }
     );
     if (!task) return res.status(404).json({ error: "Task not found" });
@@ -64,21 +65,56 @@ router.post("/:id/redo", auth, async (req, res) => {
   }
 });
 
-// UPDATE
-router.put("/:id", auth, async (req, res) => {
+// UPDATE (supports file upload for proof)
+router.put("/:id", auth, upload.single('proof'), async (req, res) => {
   try {
     const data = { ...req.body, updatedAt: new Date() };
     if (data.dueAt) data.dueAt = new Date(data.dueAt);
     if (data.remindAt) data.remindAt = new Date(data.remindAt);
+    if (data.notifyAt) data.notifyAt = new Date(data.notifyAt);
     if (data.status && !STEPS.includes(data.status)) delete data.status;
 
-    const task = await Task.findOneAndUpdate(
-      { _id: req.params.id, userId: req.user._id },
+    // Handle file upload
+    if (req.file) {
+      data.proof = `/uploads/${req.file.filename}`;
+      // Bonus points for proof?
+      await User.findByIdAndUpdate(req.user._id, { $inc: { points: 2 } });
+    }
+
+    const task = await Task.findOne({ _id: req.params.id, userId: req.user._id });
+    if (!task) return res.status(404).json({ error: "Task not found" });
+
+    // Calculate points if status changes
+    if (data.status && data.status !== task.status) {
+      let pointsChange = 0;
+
+      // Completion reward
+      if (data.status === "completed" && task.status !== "completed") {
+        pointsChange += 4;
+        data.completedAt = new Date();
+      }
+      // Un-completion penalty
+      else if (task.status === "completed" && data.status !== "completed") {
+        pointsChange -= 4;
+        data.completedAt = null;
+      }
+      // Progression reward (small)
+      else if (STEPS.indexOf(data.status) > STEPS.indexOf(task.status)) {
+        pointsChange += 1;
+      }
+
+      if (pointsChange !== 0) {
+        await User.findByIdAndUpdate(req.user._id, { $inc: { points: pointsChange } });
+        data.pointsAwarded = (task.pointsAwarded || 0) + pointsChange;
+      }
+    }
+
+    const updatedTask = await Task.findByIdAndUpdate(
+      req.params.id,
       data,
       { new: true }
     );
-    if (!task) return res.status(404).json({ error: "Task not found" });
-    res.json(task);
+    res.json(updatedTask);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "server error" });
@@ -98,12 +134,13 @@ router.delete("/:id", auth, async (req, res) => {
   }
 });
 
-// HISTORY fetch
+// HISTORY fetch (archived tasks)
 router.get("/history", auth, async (req, res) => {
   try {
-    const history = await History.find({ userId: req.user._id }).sort({
-      archivedAt: -1,
-    });
+    const history = await Task.find({
+      userId: req.user._id,
+      isArchived: true
+    }).sort({ updatedAt: -1 });
     res.json(history);
   } catch (err) {
     console.error(err);
@@ -111,57 +148,35 @@ router.get("/history", auth, async (req, res) => {
   }
 });
 
-// ARCHIVE task → move from Task → History
+// ARCHIVE task
 router.post("/:id/archive", auth, async (req, res) => {
   try {
-    const task = await Task.findOne({ _id: req.params.id, userId: req.user._id });
+    const task = await Task.findOneAndUpdate(
+      { _id: req.params.id, userId: req.user._id },
+      { isArchived: true, updatedAt: new Date() },
+      { new: true }
+    );
     if (!task) return res.status(404).json({ error: "Task not found" });
-
-    // Save to history
-    const history = new History({
-      userId: req.user._id,
-      title: task.title,
-      description: task.description,
-      dueAt: task.dueAt,
-      archivedAt: new Date(),
-      completedAt: task.completedAt || null,
-      status: task.status
-    });
-    await history.save();
-
-    // Remove from active tasks
-    await Task.deleteOne({ _id: task._id, userId: req.user._id });
 
     // Optional: reward archiving with +1 point
     await User.findByIdAndUpdate(req.user._id, { $inc: { points: 1 } });
 
-    res.json({ ok: true, history });
+    res.json({ ok: true, task });
   } catch (err) {
     console.error("Archive error:", err);
     res.status(500).json({ error: "Failed to archive task" });
   }
 });
 
-// UNARCHIVE task → move back from History → Task
+// UNARCHIVE task
 router.post("/:id/unarchive", auth, async (req, res) => {
   try {
-    const history = await History.findOne({ _id: req.params.id, userId: req.user._id });
-    if (!history) return res.status(404).json({ error: "History item not found" });
-
-    // Recreate task with same status
-    const task = new Task({
-      userId: req.user._id,
-      title: history.title,
-      description: history.description,
-      dueAt: history.dueAt,
-      completedAt: history.completedAt,
-      status: history.status || "created",
-      updatedAt: new Date()
-    });
-    await task.save();
-
-    // Remove from history
-    await History.deleteOne({ _id: history._id });
+    const task = await Task.findOneAndUpdate(
+      { _id: req.params.id, userId: req.user._id },
+      { isArchived: false, updatedAt: new Date() },
+      { new: true }
+    );
+    if (!task) return res.status(404).json({ error: "Task not found" });
 
     res.json({ ok: true, task });
   } catch (err) {
@@ -238,5 +253,5 @@ router.post("/:id/advance", auth, async (req, res) => {
   }
 });
 
- 
+
 module.exports = router;

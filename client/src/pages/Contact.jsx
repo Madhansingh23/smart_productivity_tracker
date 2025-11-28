@@ -2,107 +2,148 @@
 import { useTheme } from "../context/ThemeContext";
 import { useState } from "react";
 import { toast } from "react-hot-toast";
-import api from "../lib/api";   // calls backend /api/contact
+import api from "../lib/api";
 import {
-  Linkedin, Github, Instagram, Code2, Globe, Mail
+  Linkedin, Github, Instagram, Code2, Globe, Mail, Send, Phone, MapPin
 } from "lucide-react";
 
 export default function Contact() {
   const { theme } = useTheme();
   const [message, setMessage] = useState("");
-  const [mapInteractive, setMapInteractive] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   // Handle form submit
   async function handleSubmit(e) {
     e.preventDefault();
+    if (!message.trim()) return;
+
+    setLoading(true);
     try {
-      await api.post("/contact", { message });   // ✅ only message is sent
+      await api.post("/contact", { message });
       toast.success("Message sent successfully!");
-      setMessage(""); // reset
+      setMessage("");
     } catch (err) {
       console.error(err);
       toast.error("Failed to send message");
+    } finally {
+      setLoading(false);
     }
   }
 
   const socials = [
-    { icon: <Linkedin />, url: "https://www.linkedin.com/in/madhan-singh6382703678/" },
-    { icon: <Github />, url: "https://github.com/Madhansingh23/" },
-    { icon: <Code2 />, url: "https://leetcode.com/u/Madhansingh/" },
-    { icon: <Instagram />, url: "https://www.instagram.com/mr.darkstrange/" },
-    { icon: <Globe />, url: "https://madhan-portfolio-two.vercel.app/" },
+    { icon: <Linkedin size={20} />, url: "https://www.linkedin.com/in/madhan-singh6382703678/", label: "LinkedIn", color: "hover:text-blue-600" },
+    { icon: <Github size={20} />, url: "https://github.com/Madhansingh23/", label: "GitHub", color: "hover:text-gray-900 dark:hover:text-white" },
+    { icon: <Code2 size={20} />, url: "https://leetcode.com/u/Madhansingh/", label: "LeetCode", color: "hover:text-yellow-500" },
+    { icon: <Instagram size={20} />, url: "https://www.instagram.com/mr.darkstrange/", label: "Instagram", color: "hover:text-pink-500" },
+    { icon: <Globe size={20} />, url: "https://madhan-portfolio-two.vercel.app/", label: "Portfolio", color: "hover:text-emerald-500" },
   ];
 
   return (
-    <div className="relative w-full h-[calc(100vh-64px)]">
-      {/* Map Background */}
-      <iframe
-        title="Madurai Map"
-        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3910.0692674095653!2d78.11977891480071!3d9.925200392907675!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3b00c582b9a6e8f1%3A0x9a8c24e82f85a74d!2sMadurai%2C%20Tamil%20Nadu!5e0!3m2!1sen!2sin!4v1675668591671!5m2!1sen!2sin"
-        className={`absolute inset-0 w-full h-full border-0 transition-opacity duration-300
-          ${mapInteractive ? "opacity-100" : "opacity-70"}`}
-        style={{ pointerEvents: mapInteractive ? "auto" : "none" }}
-        allowFullScreen
-        loading="lazy"
-      />
+    <div className="max-w-4xl mx-auto px-4 py-12 animate-in fade-in duration-500">
+      <div className="text-center mb-12">
+        <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
+          Get in Touch
+        </h1>
+        <p className="text-lg text-gray-500 dark:text-gray-400 max-w-2xl mx-auto">
+          Have a question, suggestion, or just want to say hi? I'd love to hear from you!
+        </p>
+      </div>
 
-      {/* Click/drag overlay */}
-      <div
-        className="absolute inset-0"
-        onClick={() => setMapInteractive(true)}
-        onMouseLeave={() => setMapInteractive(false)}
-      />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        {/* Contact Info & Socials */}
+        <div className="space-y-6">
+          <div className="bg-white dark:bg-neutral-900 p-8 rounded-3xl border border-gray-100 dark:border-neutral-800 shadow-xl">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Contact Info</h2>
 
-      {/* Contact Card */}
-      <div className="absolute inset-0 flex items-center justify-center">
-        <div
-          className={`w-full max-w-lg rounded-lg shadow-xl p-6 transition duration-300
-            ${theme === "dark" ? "bg-black/80 text-white" : "bg-white text-black"}
-            ${mapInteractive ? "opacity-40" : "opacity-100"}`}
-        >
-          <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
-            <Mail size={20} /> Contact Creator
-          </h2>
+            <div className="space-y-6">
+              <div className="flex items-start gap-4">
+                <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl text-blue-600 dark:text-blue-400">
+                  <Mail size={24} />
+                </div>
+                <div>
+                  <h3 className="font-bold text-gray-900 dark:text-white">Email</h3>
+                  <p className="text-gray-500 dark:text-gray-400">madhansingh@example.com</p>
+                </div>
+              </div>
 
-          {/* Form (only message needed) */}
-          <form onSubmit={handleSubmit} className="space-y-3">
-            <textarea
-              className="w-full p-2 border rounded"
-              placeholder="Your message..."
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              required
-            />
+              <div className="flex items-start gap-4">
+                <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-xl text-green-600 dark:text-green-400">
+                  <Phone size={24} />
+                </div>
+                <div>
+                  <h3 className="font-bold text-gray-900 dark:text-white">Phone</h3>
+                  <p className="text-gray-500 dark:text-gray-400">+91 6382703678</p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-4">
+                <div className="p-3 bg-purple-50 dark:bg-purple-900/20 rounded-xl text-purple-600 dark:text-purple-400">
+                  <MapPin size={24} />
+                </div>
+                <div>
+                  <h3 className="font-bold text-gray-900 dark:text-white">Location</h3>
+                  <p className="text-gray-500 dark:text-gray-400">India</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-8 pt-8 border-t border-gray-100 dark:border-neutral-800">
+              <h3 className="font-bold text-gray-900 dark:text-white mb-4">Connect with me</h3>
+              <div className="flex flex-wrap gap-3">
+                {socials.map((s, index) => (
+                  <a
+                    key={index}
+                    href={s.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`p-3 bg-gray-50 dark:bg-neutral-800 rounded-xl text-gray-500 transition-all transform hover:scale-110 hover:shadow-md ${s.color}`}
+                    title={s.label}
+                  >
+                    {s.icon}
+                  </a>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Contact Form */}
+        <div className="bg-white dark:bg-neutral-900 p-8 rounded-3xl border border-gray-100 dark:border-neutral-800 shadow-xl">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Send a Message</h2>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Your Message
+              </label>
+              <textarea
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                placeholder="Type your message here..."
+                className="w-full h-40 p-4 rounded-xl bg-gray-50 dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 focus:ring-2 focus:ring-blue-500 outline-none resize-none transition-all"
+                required
+              />
+            </div>
             <button
               type="submit"
-              className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded"
+              disabled={loading}
+              className="w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl font-bold shadow-lg shadow-blue-500/30 transition-all transform hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
             >
-              Submit
+              {loading ? (
+                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              ) : (
+                <>
+                  <Send size={20} /> Send Message
+                </>
+              )}
             </button>
           </form>
-
-          {/* Social Buttons */}
-          <div className="flex justify-center gap-4 mt-6">
-            {socials.map((s, i) => (
-              <a
-                key={i}
-                href={s.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="p-2 rounded-full hover:bg-emerald-600 hover:text-white transition"
-                title={s.url}
-              >
-                {s.icon}
-              </a>
-            ))}
-          </div>
-
-          {/* Footer */}
-          <footer className="mt-6 text-center text-xs opacity-70">
-            © All rights reserved by <b>Madhan Singh</b> | Call: +91 6382703678
-          </footer>
         </div>
       </div>
+
+      <footer className="mt-12 text-center text-sm text-gray-500 dark:text-gray-400">
+        <p>© {new Date().getFullYear()} Smart Productivity Tracker. All rights reserved.</p>
+        <p className="mt-1">Designed & Built by <span className="font-bold text-gray-900 dark:text-white">Madhan Singh</span></p>
+      </footer>
     </div>
   );
 }

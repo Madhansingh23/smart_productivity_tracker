@@ -3,14 +3,14 @@ const mongoose = require('mongoose');
 
 const userSchema = new mongoose.Schema({
   firstName: { type: String, default: '' },
-  lastName:  { type: String, default: '' },
+  lastName: { type: String, default: '' },
 
-  username:  { type: String, required: true, unique: true, index: true, trim: true, lowercase: true },
+  username: { type: String, required: true, unique: true, index: true, trim: true, lowercase: true },
   usernameChanged: { type: Boolean, default: false },
-  email:     { type: String, required: true, unique: true, index: true, lowercase: true, trim: true },
-  phone:     { type: String, unique: true, sparse: true },
+  email: { type: String, required: true, unique: true, index: true, lowercase: true, trim: true },
+  phone: { type: String, unique: true, sparse: true },
 
-  password:  { type: String, required: true },
+  password: { type: String, required: true },
 
   // instead of file path
   profilePic: {
@@ -18,15 +18,17 @@ const userSchema = new mongoose.Schema({
     contentType: String
   },
 
-  dob:       { type: Date },
-  age:       { type: Number },
-  address:   { type: String, default: '' },
+  dob: { type: Date },
+  age: { type: Number },
+  address: { type: String, default: '' },
 
   emailVerified: { type: Boolean, default: false },
   phoneVerified: { type: Boolean, default: false },
 
-  points:   { type: Number, default: 0 },
+  points: { type: Number, default: 0 },
+  badges: { type: [String], default: [] },
   settings: {
+    theme: { type: String, default: "light" },
     timezone: { type: String, default: 'UTC' },
     minDailyTasks: { type: Number, default: 1 },
     notificationsEnabled: { type: Boolean, default: true }

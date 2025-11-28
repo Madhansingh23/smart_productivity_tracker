@@ -1,47 +1,85 @@
 // src/App.jsx
-import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import React, { Suspense, lazy } from 'react';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext.jsx';
 import { ThemeProvider } from './context/ThemeContext.jsx';
-import SidebarLayout from './components/SidebarLayout.jsx';
-import Login from './pages/Login.jsx';
-import Signup from './pages/Signup.jsx';
-import Dashboard from './pages/Dashboard.jsx';
-import DecisionHelper from './pages/DecisionHelper.jsx';
-import TasksPage from './pages/TasksPage.jsx';
-import ProfilePage from './pages/Profilepage.jsx';
-import HistoryPage from './pages/HistoryPage.jsx';
-import Contact from './pages/Contact.jsx';
-import Error from './pages/Error.jsx';
-import Snake from './pages/Snake.jsx';
+import Loading from './components/Loading.jsx';
+import { AnimatePresence } from 'framer-motion';
+import PageWrapper from './components/PageWrapper.jsx';
+
+// Lazy load components
+const SidebarLayout = lazy(() => import('./components/SidebarLayout.jsx'));
+const Login = lazy(() => import('./pages/Login.jsx'));
+const Signup = lazy(() => import('./pages/Signup.jsx'));
+const Dashboard = lazy(() => import('./pages/Dashboard.jsx'));
+const TasksPage = lazy(() => import('./pages/TasksPage.jsx'));
+const RulesPage = lazy(() => import('./pages/RulesPage.jsx'));
+const Contact = lazy(() => import('./pages/Contact.jsx'));
+const LeaderboardPage = lazy(() => import('./pages/LeaderboardPage.jsx'));
+const PomodoroPage = lazy(() => import('./pages/PomodoroPage.jsx'));
+const AISuggestionsPage = lazy(() => import('./pages/AISuggestionsPage.jsx'));
+const FocusMode = lazy(() => import('./pages/FocusMode.jsx'));
+
+const HistoryPage = lazy(() => import('./pages/HistoryPage.jsx'));
+const ProfilePage = lazy(() => import('./pages/ProfilePage.jsx'));
+const Snake = lazy(() => import('./pages/Snake.jsx'));
+const DecisionHelper = lazy(() => import('./pages/DecisionHelper.jsx'));
+const Error = () => <div className="p-8 text-center text-red-500">404 Not Found</div>;
 
 function PrivateRoute({ children }) {
   const { user } = useAuth();
   return user ? children : <Navigate to="/login" replace />;
 }
 
+function AnimatedRoutes() {
+  const location = useLocation();
+
+  return (
+    <AnimatePresence mode="wait">
+      <Routes location={location} key={location.pathname}>
+        <Route path="/login" element={<PageWrapper><Login /></PageWrapper>} />
+        <Route path="/signup" element={<PageWrapper><Signup /></PageWrapper>} />
+
+        {/* Protected Routes */}
+        <Route
+          path="/*"
+          element={
+            <PrivateRoute>
+              <SidebarLayout>
+                <Routes location={location} key={location.pathname}>
+                  <Route path="/" element={<PageWrapper><Dashboard /></PageWrapper>} />
+                  <Route path="/tasks" element={<PageWrapper><TasksPage /></PageWrapper>} />
+                  <Route path="/rules" element={<PageWrapper><RulesPage /></PageWrapper>} />
+                  <Route path="/leaderboard" element={<PageWrapper><LeaderboardPage /></PageWrapper>} />
+                  <Route path="/pomodoro" element={<PageWrapper><PomodoroPage /></PageWrapper>} />
+                  <Route path="/focus" element={<PageWrapper><FocusMode /></PageWrapper>} />
+                  <Route path="/ai-assist" element={<PageWrapper><AISuggestionsPage /></PageWrapper>} />
+                  <Route path="/decision-helper" element={<PageWrapper><DecisionHelper /></PageWrapper>} />
+                  <Route path="/history" element={<PageWrapper><HistoryPage /></PageWrapper>} />
+                  <Route path="/profile/:username" element={<PageWrapper><ProfilePage /></PageWrapper>} />
+                  <Route path="/contact" element={<PageWrapper><Contact /></PageWrapper>} />
+                  <Route path="/snake" element={<PageWrapper><Snake /></PageWrapper>} />
+                  <Route path="*" element={<Navigate to="/" replace />} />
+                </Routes>
+              </SidebarLayout>
+            </PrivateRoute>
+          }
+        />
+      </Routes>
+    </AnimatePresence>
+  );
+}
+
 export default function App() {
   return (
-    <ThemeProvider>
-      <AuthProvider>
+    <AuthProvider>
+      <ThemeProvider>
         <BrowserRouter>
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<Signup />} />
-
-            <Route path="/" element={<PrivateRoute><SidebarLayout><Dashboard/></SidebarLayout></PrivateRoute>} />
-            <Route path="/decision-helper" element={<PrivateRoute><SidebarLayout><DecisionHelper/></SidebarLayout></PrivateRoute>} />
-            <Route path="/tasks" element={<PrivateRoute><SidebarLayout><TasksPage/></SidebarLayout></PrivateRoute>} />
-            <Route path="/history" element={<PrivateRoute><SidebarLayout><HistoryPage /></SidebarLayout></PrivateRoute>}  />
-            <Route path="/profile/:username" element={<PrivateRoute><SidebarLayout><ProfilePage/></SidebarLayout></PrivateRoute>} />
-            <Route path="/contact" element={<PrivateRoute><SidebarLayout><Contact /></SidebarLayout></PrivateRoute>}  />
-            <Route path="/snake" element={<PrivateRoute><SidebarLayout><Snake /></SidebarLayout></PrivateRoute>}  />
-
-            <Route path="/error" element={<Error />} />
-            <Route path="*" element={<Navigate to="/error" replace />} />
-          </Routes>
+          <Suspense fallback={<Loading />}>
+            <AnimatedRoutes />
+          </Suspense>
         </BrowserRouter>
-      </AuthProvider>
-    </ThemeProvider>
+      </ThemeProvider>
+    </AuthProvider>
   );
 }

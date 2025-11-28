@@ -1,7 +1,6 @@
 // src/index.js
 require('dotenv').config();
 
-
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
@@ -9,30 +8,35 @@ const path = require('path');
 const cron = require('node-cron');
 const helmet = require('helmet');
 const compression = require('compression');
+const http = require('http');
+const { initSocket } = require('./socket');
+const initCronJobs = require('./utils/cron');
 
 const authRoutes = require('./routes/auth');
 const tasksRoutes = require('./routes/tasks');
-const eventsRoutes = require('./routes/events');
-const suggestionsRoutes = require('./routes/suggestions');
-const aiRoutes = require('./routes/ai');
-const profileRoutes = require('./routes/profile');
+// const eventsRoutes = require('./routes/events'); // Commented out if not used yet
+// const suggestionsRoutes = require('./routes/suggestions'); // Commented out if not used yet
+// const aiRoutes = require('./routes/ai'); // Commented out if not used yet
+// const profileRoutes = require('./routes/profile'); // Commented out if not used yet
 const userRoutes = require("./routes/users");
-const conatctRoutes = require("./routes/contact");
-
+const contactRoutes = require("./routes/contact");
+const leaderboardRoutes = require("./routes/leaderboard");
 
 const app = express();
+const server = http.createServer(app);
 
 const allowedOrigins = [
   "http://localhost:3000",
   "http://127.0.0.1:3000",
-  "https://smart-productivity-tracker-blush.vercel.app" // ✅ your deployed frontend
+  "http://localhost:5173", // Vite default
+  "http://127.0.0.1:5173",
+  "https://smart-productivity-tracker-blush.vercel.app"
 ];
-
 
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (!origin) return callback(null, true); // allow server-to-server/curl
+      if (!origin) return callback(null, true);
       if (allowedOrigins.includes(origin)) {
         return callback(null, true);
       }
@@ -45,23 +49,36 @@ app.use(
   })
 );
 
-// respond to all preflight requests
 app.options("*", cors({
   origin: allowedOrigins,
   credentials: true,
 }));
 
+const rateLimit = require('express-rate-limit');
+const mongoSanitize = require('express-mongo-sanitize');
+const xss = require('xss-clean');
 
-app.use((req, res, next) => {
-  console.log("Request Origin:", req.headers.origin);
-  next();
-});
+// ... imports ...
 
 app.use(helmet());
 app.use(compression());
-app.use(express.json({ limit: '1mb' }));
+app.use(express.json({ limit: '5mb' }));
 
-// static for images (cache for a week)
+// Data Sanitization against NoSQL query injection
+app.use(mongoSanitize());
+
+// Data Sanitization against XSS
+app.use(xss());
+
+// Rate Limiting
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+  message: 'Too many requests from this IP, please try again after 15 minutes'
+});
+app.use('/api', limiter);
+
+// static for images
 app.use(
   '/uploads',
   express.static(path.join(__dirname, '../uploads'), {
@@ -70,40 +87,40 @@ app.use(
   })
 );
 
+// Initialize Socket.io
+const io = initSocket(server, allowedOrigins);
+app.set('io', io);
+
+// Initialize Cron Jobs
+initCronJobs();
+
 // routes
 app.use('/api/auth', authRoutes);
 app.use('/api/tasks', tasksRoutes);
-app.use('/api/events', eventsRoutes);
-app.use('/api/suggestions', suggestionsRoutes);
-app.use('/api/ai', aiRoutes);
-app.use('/api/profile', profileRoutes);
-app.use("/api/users", userRoutes); 
-app.use("/api/contact", conatctRoutes);
-
+app.use("/api/users", userRoutes);
+app.use("/api/contact", contactRoutes);
+app.use("/api/leaderboard", leaderboardRoutes);
+app.use("/api/ai", require("./routes/ai"));
 
 // health
 app.get('/api/health', (req, res) => res.json({ ok: true }));
 
+// Global Error Handler
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ error: 'Something went wrong!', details: err.message });
+});
+
 const PORT = process.env.PORT || 5000;
-const MONGO =
-  process.env.MONGO_URI || 'mongodb://localhost:27017/smart_prod';
+const MONGO = process.env.MONGO_URI || 'mongodb://localhost:27017/smart_prod';
 
 mongoose
   .connect(MONGO, { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => {
-    console.log('Mongo connected', MONGO);
-    app.listen(PORT, () => console.log('Server running on', PORT));
+    console.log('Mongo connected');
+    server.listen(PORT, () => console.log('Server running on', PORT));
   })
   .catch((err) => {
     console.error(err);
     process.exit(1);
   });
-
-// cron placeholder
-cron.schedule('* * * * *', async () => {
-  try {
-    // reminders etc.
-  } catch (e) {
-    console.error('cron err', e);
-  }
-});

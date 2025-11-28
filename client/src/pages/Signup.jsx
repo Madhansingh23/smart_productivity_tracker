@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext.jsx';
 import { useNavigate, Link } from 'react-router-dom';
 import { UserPlus, User, Mail, Phone, Lock, ArrowRight, Check, X, ShieldCheck } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { motion } from 'framer-motion';
 
 export default function Signup() {
   const [username, setUsername] = useState('');
@@ -104,26 +105,59 @@ export default function Signup() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-neutral-900 dark:to-neutral-800 p-4 py-10">
-      <div className="w-full max-w-2xl bg-white/80 dark:bg-neutral-900/80 backdrop-blur-xl border border-white/20 dark:border-neutral-700 rounded-3xl shadow-2xl overflow-hidden">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="w-full max-w-2xl bg-white/80 dark:bg-neutral-900/80 backdrop-blur-xl border border-white/20 dark:border-neutral-700 rounded-3xl shadow-2xl overflow-hidden"
+      >
         <div className="p-8 sm:p-12">
           <div className="text-center mb-10">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-500 text-white mb-6 shadow-lg shadow-emerald-500/30">
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ type: "spring", stiffness: 260, damping: 20, delay: 0.1 }}
+              className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-500 text-white mb-6 shadow-lg shadow-emerald-500/30"
+            >
               <UserPlus size={32} />
-            </div>
-            <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Create Account</h2>
-            <p className="text-gray-500 dark:text-gray-400">Join us and start tracking your productivity</p>
+            </motion.div>
+            <motion.h2
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="text-3xl font-bold text-gray-900 dark:text-white mb-2"
+            >
+              Create Account
+            </motion.h2>
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.3 }}
+              className="text-gray-500 dark:text-gray-400"
+            >
+              Join us and start tracking your productivity
+            </motion.p>
           </div>
 
           {error && (
-            <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-xl flex items-center gap-3 text-red-600 dark:text-red-400">
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              className="mb-6 p-4 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-xl flex items-center gap-3 text-red-600 dark:text-red-400"
+            >
               <X size={20} />
               <p className="text-sm font-medium">{error}</p>
-            </div>
+            </motion.div>
           )}
 
           <form onSubmit={submit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Username */}
-            <div className="space-y-2 md:col-span-2">
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.4 }}
+              className="space-y-2 md:col-span-2"
+            >
               <label className="text-sm font-medium text-gray-700 dark:text-gray-300 ml-1">Username</label>
               <div className="relative group">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400 group-focus-within:text-blue-500 transition-colors">
@@ -141,10 +175,15 @@ export default function Signup() {
                   Unavailable. Try: {usernameSuggestions.join(', ')}
                 </p>
               )}
-            </div>
+            </motion.div>
 
             {/* Email */}
-            <div className="space-y-2 md:col-span-2">
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.5 }}
+              className="space-y-2 md:col-span-2"
+            >
               <label className="text-sm font-medium text-gray-700 dark:text-gray-300 ml-1">Email Address</label>
               <div className="flex gap-2">
                 <div className="relative group flex-1">
@@ -185,10 +224,15 @@ export default function Signup() {
                   </button>
                 </div>
               )}
-            </div>
+            </motion.div>
 
             {/* Phone */}
-            <div className="space-y-2 md:col-span-2">
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.6 }}
+              className="space-y-2 md:col-span-2"
+            >
               <label className="text-sm font-medium text-gray-700 dark:text-gray-300 ml-1">Phone Number <span className="text-gray-400 font-normal">(Optional)</span></label>
               <div className="flex gap-2">
                 <div className="relative group flex-1">
@@ -230,10 +274,15 @@ export default function Signup() {
                   </button>
                 </div>
               )}
-            </div>
+            </motion.div>
 
             {/* Passwords */}
-            <div className="space-y-2">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.7 }}
+              className="space-y-2"
+            >
               <label className="text-sm font-medium text-gray-700 dark:text-gray-300 ml-1">Password</label>
               <div className="relative group">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400 group-focus-within:text-blue-500 transition-colors">
@@ -247,9 +296,14 @@ export default function Signup() {
                   onChange={e => setPassword(e.target.value)}
                 />
               </div>
-            </div>
+            </motion.div>
 
-            <div className="space-y-2">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.8 }}
+              className="space-y-2"
+            >
               <label className="text-sm font-medium text-gray-700 dark:text-gray-300 ml-1">Confirm Password</label>
               <div className="relative group">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400 group-focus-within:text-blue-500 transition-colors">
@@ -263,12 +317,19 @@ export default function Signup() {
                   onChange={e => setConfirmPassword(e.target.value)}
                 />
               </div>
-            </div>
+            </motion.div>
 
-            <div className="md:col-span-2 pt-4">
-              <button
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.9 }}
+              className="md:col-span-2 pt-4"
+            >
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
                 disabled={loading}
-                className="w-full group relative flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-semibold py-3.5 px-6 rounded-xl transition-all transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40"
+                className="w-full group relative flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-semibold py-3.5 px-6 rounded-xl transition-all disabled:opacity-70 disabled:cursor-not-allowed shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40"
               >
                 {loading ? (
                   <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -278,20 +339,25 @@ export default function Signup() {
                     <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
                   </>
                 )}
-              </button>
-            </div>
+              </motion.button>
+            </motion.div>
           </form>
 
-          <div className="mt-8 text-center">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 1.0 }}
+            className="mt-8 text-center"
+          >
             <p className="text-sm text-gray-500 dark:text-gray-400">
               Already have an account?{' '}
               <Link to="/login" className="font-semibold text-blue-600 hover:text-blue-700 dark:text-blue-400 hover:underline transition-colors">
                 Sign in instead
               </Link>
             </p>
-          </div>
+          </motion.div>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }

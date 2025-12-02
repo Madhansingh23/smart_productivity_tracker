@@ -604,14 +604,13 @@ export default function TasksPage() {
                     </div>
                     <div>
                       <p className="font-medium text-emerald-900 dark:text-emerald-100">Proof Uploaded</p>
-                      <a
-                        href={`http://localhost:5000${selectedTask.proof}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-xs text-emerald-600 dark:text-emerald-400 hover:underline"
-                      >
-                        View Proof
-                      </a>
+                      <div className="mt-2">
+                        <img
+                          src={selectedTask.proof}
+                          alt="Proof"
+                          className="max-w-full h-auto rounded-lg border border-gray-200 dark:border-neutral-700 shadow-sm"
+                        />
+                      </div>
                     </div>
                   </div>
                 ) : (

@@ -7,30 +7,36 @@ const { sendMail } = require('../utils/mailer');
 
 const router = express.Router();
 
-const safeUser = (u)=>({
-  id: u._id, firstName: u.firstName, lastName: u.lastName,
-  username: u.username, email: u.email, phone: u.phone,
-  profilePic: u.profilePic, age: u.age, dob: u.dob, address: u.address,
-  emailVerified: u.emailVerified, phoneVerified: u.phoneVerified, points: u.points
-});
+const safeUser = (u) => {
+  let profilePic = u.profilePic;
+  if (profilePic && profilePic.data) {
+    profilePic = `data:${profilePic.contentType};base64,${profilePic.data.toString('base64')}`;
+  }
+  return {
+    id: u._id, firstName: u.firstName, lastName: u.lastName,
+    username: u.username, email: u.email, phone: u.phone,
+    profilePic, age: u.age, dob: u.dob, address: u.address,
+    emailVerified: u.emailVerified, phoneVerified: u.phoneVerified, points: u.points
+  };
+};
 
 // --- Signup ---
 // --- Signup ---
-router.post('/signup', async (req,res)=>{
-  try{
+router.post('/signup', async (req, res) => {
+  try {
     const { firstName, lastName, email, password, username, phone } = req.body;
-    if(!email || !password || !username)
+    if (!email || !password || !username)
       return res.status(400).json({ error: 'username, email & password required' });
 
     const emailExists = await User.findOne({ email: email.toLowerCase().trim() });
-    if(emailExists) return res.status(400).json({ error: 'Email already registered' });
+    if (emailExists) return res.status(400).json({ error: 'Email already registered' });
 
     const usernameExists = await User.findOne({ username: username.toLowerCase().trim() });
-    if(usernameExists) return res.status(400).json({ error: 'Username already taken' });
+    if (usernameExists) return res.status(400).json({ error: 'Username already taken' });
 
-    if(phone){
+    if (phone) {
       const phoneExists = await User.findOne({ phone });
-      if(phoneExists) return res.status(400).json({ error: 'Phone number already registered' });
+      if (phoneExists) return res.status(400).json({ error: 'Phone number already registered' });
     }
 
     const hashed = await bcrypt.hash(password, 10);
@@ -43,28 +49,28 @@ router.post('/signup', async (req,res)=>{
     });
     await user.save();
 
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET || 'secret', { expiresIn:'7d' });
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET || 'secret', { expiresIn: '7d' });
     res.json({ token, user: safeUser(user) });
-  }catch(err){
+  } catch (err) {
     console.error(err);
-    res.status(500).json({ error:'server error' });
+    res.status(500).json({ error: 'server error' });
   }
 });
 
 // --- Login ---
-router.post('/login', async (req,res)=>{
-  try{
+router.post('/login', async (req, res) => {
+  try {
     const { identifier, email, password } = req.body;
     const lookup = (identifier || email || '').toLowerCase().trim();
-    const user = await User.findOne({ $or:[{email: lookup},{username: lookup}] });
-    if(!user) return res.status(400).json({ error: 'Invalid credentials' });
+    const user = await User.findOne({ $or: [{ email: lookup }, { username: lookup }] });
+    if (!user) return res.status(400).json({ error: 'Invalid credentials' });
     const ok = await bcrypt.compare(password, user.password);
-    if(!ok) return res.status(400).json({ error: 'Invalid credentials' });
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET || 'secret', { expiresIn:'7d' });
+    if (!ok) return res.status(400).json({ error: 'Invalid credentials' });
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET || 'secret', { expiresIn: '7d' });
     res.json({ token, user: safeUser(user) });
-  }catch(err){
+  } catch (err) {
     console.error(err);
-    res.status(500).json({ error:'server error' });
+    res.status(500).json({ error: 'server error' });
   }
 });
 
@@ -77,8 +83,8 @@ router.get('/check-username', async (req, res) => {
   if (exists) {
     const base = username.replace(/[^a-z0-9]/g, '');
     suggestions = [
-      `${base}${Math.floor(Math.random()*1000)}`,
-      `${base}_${Math.floor(Math.random()*100)}`,
+      `${base}${Math.floor(Math.random() * 1000)}`,
+      `${base}_${Math.floor(Math.random() * 100)}`,
       `${base}${new Date().getFullYear()}`
     ];
   }
@@ -101,14 +107,14 @@ router.get('/check-phone', async (req, res) => {
 // --- Email OTP (can be sent before signup) ---
 const tempOtps = new Map(); // { email: { code, expiry } }
 
-router.post('/send-otp', async (req,res)=>{
+router.post('/send-otp', async (req, res) => {
   try {
     const { email } = req.body;
-    const norm = String(email||'').toLowerCase().trim();
-    if(!norm) return res.status(400).json({ error: 'Email required' });
+    const norm = String(email || '').toLowerCase().trim();
+    if (!norm) return res.status(400).json({ error: 'Email required' });
 
     const code = '' + Math.floor(100000 + Math.random() * 900000);
-    tempOtps.set(norm, { code, expiry: Date.now() + 5*60*1000 });
+    tempOtps.set(norm, { code, expiry: Date.now() + 5 * 60 * 1000 });
 
     await sendMail({
       to: norm,
@@ -117,27 +123,27 @@ router.post('/send-otp', async (req,res)=>{
              <p>Your OTP is <b>${code}</b>. It expires in 5 minutes.</p>`
     });
 
-    res.json({ sent:true });
-  } catch(err){
+    res.json({ sent: true });
+  } catch (err) {
     console.error(err);
-    res.status(500).json({ error:'Failed to send OTP' });
+    res.status(500).json({ error: 'Failed to send OTP' });
   }
 });
 
-router.post('/verify-otp', async (req,res)=>{
+router.post('/verify-otp', async (req, res) => {
   try {
     const { email, code } = req.body;
-    const norm = String(email||'').toLowerCase().trim();
+    const norm = String(email || '').toLowerCase().trim();
     const entry = tempOtps.get(norm);
-    if(!entry) return res.status(400).json({ verified:false, error:'No OTP sent' });
-    if(entry.code !== String(code) || Date.now() > entry.expiry)
-      return res.status(400).json({ verified:false, error:'Invalid or expired OTP' });
+    if (!entry) return res.status(400).json({ verified: false, error: 'No OTP sent' });
+    if (entry.code !== String(code) || Date.now() > entry.expiry)
+      return res.status(400).json({ verified: false, error: 'Invalid or expired OTP' });
 
     tempOtps.delete(norm);
-    res.json({ verified:true });
-  } catch(err){
+    res.json({ verified: true });
+  } catch (err) {
     console.error(err);
-    res.status(500).json({ verified:false, error:'Verification failed' });
+    res.status(500).json({ verified: false, error: 'Verification failed' });
   }
 });
 

@@ -157,7 +157,7 @@ export default function Dashboard() {
       variants={container}
       initial="hidden"
       animate="show"
-      className="space-y-6"
+      className="space-y-4"
     >
       {showNotifications && (
         <NotificationModal
@@ -259,16 +259,16 @@ export default function Dashboard() {
       </motion.div>
 
       {/* Main Grid: Chart, Calendar, News, AI */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Left Column: Chart & Quote */}
-        <motion.div variants={item} className="lg:col-span-2 space-y-6 flex flex-col">
+        <motion.div variants={item} className="lg:col-span-2 space-y-4 flex flex-col">
           {/* Activity Chart */}
           <div className="bg-white dark:bg-neutral-900 p-6 rounded-3xl border border-gray-100 dark:border-neutral-800 shadow-sm flex-1">
             <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
               <TrendingUp size={20} className="text-blue-500" />
               Productivity Trend
             </h3>
-            <div className="h-[300px] w-full">
+            <div className="flex-1 min-h-[300px] w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={chartData}>
                   <defs>
@@ -299,7 +299,7 @@ export default function Dashboard() {
         </motion.div>
 
         {/* Right Column: Calendar & News */}
-        <motion.div variants={item} className="space-y-6 flex flex-col">
+        <motion.div variants={item} className="space-y-4 flex flex-col">
           {/* Calendar Widget */}
           <div className="flex-1">
             <CalendarWidget tasks={tasks} />

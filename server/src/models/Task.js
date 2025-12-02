@@ -13,7 +13,10 @@ const taskSchema = new mongoose.Schema({
   actualMinutes: { type: Number, default: 0 },
   status: { type: String, enum: ['created', 'in-progress', 'checking', 'completed'], default: 'created' },
   pointsAwarded: { type: Number, default: 0 },
-  proof: { type: String }, // Path to uploaded file
+  proof: {
+    data: Buffer,
+    contentType: String
+  }, // Stored in DB instead of path
   notifyAt: { type: Date }, // Custom notification time
   isArchived: { type: Boolean, default: false }, // Soft delete/archive
   createdAt: { type: Date, default: Date.now },

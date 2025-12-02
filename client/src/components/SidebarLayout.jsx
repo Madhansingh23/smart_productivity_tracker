@@ -179,7 +179,7 @@ export default function SidebarLayout({ children }) {
 
       {/* Main Content */}
       <main className="flex-1 md:ml-72 min-h-screen pt-16 md:pt-0 transition-all duration-300 flex flex-col relative z-10">
-        <div className="p-4 md:p-8 max-w-7xl mx-auto w-full flex-1">
+        <div className="p-4 md:p-6 max-w-[1600px] mx-auto w-full flex-1">
           {children}
         </div>
       </main>

@@ -9,6 +9,15 @@ const History = require("../models/History");
 
 const STEPS = ["created", "in-progress", "checking", "completed"];
 
+// Helper to format task for response (convert buffer to base64)
+const formatTask = (task) => {
+  const t = task.toObject ? task.toObject() : task;
+  if (t.proof && t.proof.data) {
+    t.proof = `data:${t.proof.contentType};base64,${t.proof.data.toString('base64')}`;
+  }
+  return t;
+};
+
 // CREATE task (+1 point)
 router.post("/", auth, async (req, res) => {
   try {
@@ -41,7 +50,7 @@ router.get("/", auth, async (req, res) => {
       userId: req.user._id,
       isArchived: false
     }).sort({ createdAt: -1 });
-    res.json(tasks);
+    res.json(tasks.map(formatTask));
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "server error" });
@@ -58,7 +67,7 @@ router.post("/:id/redo", auth, async (req, res) => {
     );
     if (!task) return res.status(404).json({ error: "Task not found" });
     await User.findByIdAndUpdate(req.user._id, { $inc: { points: -3 } });
-    res.json(task);
+    res.json(formatTask(task));
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "server error" });
@@ -76,7 +85,10 @@ router.put("/:id", auth, upload.single('proof'), async (req, res) => {
 
     // Handle file upload
     if (req.file) {
-      data.proof = `/uploads/${req.file.filename}`;
+      data.proof = {
+        data: req.file.buffer,
+        contentType: req.file.mimetype
+      };
       // Bonus points for proof?
       await User.findByIdAndUpdate(req.user._id, { $inc: { points: 2 } });
     }
@@ -114,7 +126,7 @@ router.put("/:id", auth, upload.single('proof'), async (req, res) => {
       data,
       { new: true }
     );
-    res.json(updatedTask);
+    res.json(formatTask(updatedTask));
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "server error" });
@@ -161,7 +173,7 @@ router.post("/:id/archive", auth, async (req, res) => {
     // Optional: reward archiving with +1 point
     await User.findByIdAndUpdate(req.user._id, { $inc: { points: 1 } });
 
-    res.json({ ok: true, task });
+    res.json({ ok: true, task: formatTask(task) });
   } catch (err) {
     console.error("Archive error:", err);
     res.status(500).json({ error: "Failed to archive task" });
@@ -178,7 +190,7 @@ router.post("/:id/unarchive", auth, async (req, res) => {
     );
     if (!task) return res.status(404).json({ error: "Task not found" });
 
-    res.json({ ok: true, task });
+    res.json({ ok: true, task: formatTask(task) });
   } catch (err) {
     console.error("Unarchive error:", err);
     res.status(500).json({ error: "Failed to unarchive task" });
@@ -246,7 +258,7 @@ router.post("/:id/advance", auth, async (req, res) => {
       { new: true }
     ).select("-password");
 
-    res.json({ task, user }); // return both
+    res.json({ task: formatTask(task), user }); // return both
   } catch (err) {
     console.error("Advance error:", err);
     res.status(500).json({ error: "server error" });

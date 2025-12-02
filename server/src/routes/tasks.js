@@ -23,6 +23,17 @@ router.post("/", auth, async (req, res) => {
   try {
     const { title, description, dueAt, remindAt, notifyAt } = req.body;
 
+    // Check for duplicate task (case-insensitive)
+    const existingTask = await Task.findOne({
+      userId: req.user._id,
+      title: { $regex: new RegExp(`^${title.trim()}$`, 'i') },
+      isArchived: false
+    });
+
+    if (existingTask) {
+      return res.status(400).json({ error: "Task with this title already exists" });
+    }
+
     const task = new Task({
       userId: req.user._id,
       title,

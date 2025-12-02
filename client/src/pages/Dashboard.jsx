@@ -4,7 +4,8 @@ import { Clock, Trophy, Newspaper, ListChecks, TrendingUp, Calendar, CheckCircle
 import TechNews from "../components/TechNews";
 import { toast } from "react-hot-toast";
 import Loading from "../components/Loading.jsx";
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+// import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'; // Moved to ChartWidget
+const ChartWidget = React.lazy(() => import("../components/ChartWidget"));
 import { motion } from "framer-motion";
 
 import CalendarWidget from "../components/CalendarWidget";
@@ -157,7 +158,7 @@ export default function Dashboard() {
       variants={container}
       initial="hidden"
       animate="show"
-      className="space-y-4"
+      className="space-y-6 max-w-[1800px] mx-auto"
     >
       {showNotifications && (
         <NotificationModal
@@ -166,165 +167,134 @@ export default function Dashboard() {
         />
       )}
 
-      {/* Welcome Section */}
-      <motion.div variants={item} className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-neutral-900 p-6 rounded-3xl border border-gray-100 dark:border-neutral-800 shadow-sm">
-        <div className="flex items-center gap-4">
-          <div className="relative">
+      {/* Welcome Section - Humanoid Pill */}
+      <motion.div variants={item} className="relative overflow-hidden bg-white/80 dark:bg-neutral-900/80 backdrop-blur-xl p-8 rounded-[3rem] border border-white/20 dark:border-neutral-800 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-6 group hover:shadow-2xl transition-all duration-500">
+        {/* Decorative blobs */}
+        <div className="absolute -top-24 -left-24 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl group-hover:bg-blue-500/20 transition-colors duration-700"></div>
+        <div className="absolute -bottom-24 -right-24 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl group-hover:bg-purple-500/20 transition-colors duration-700"></div>
+
+        <div className="flex items-center gap-6 relative z-10">
+          <div className="relative group-hover:scale-105 transition-transform duration-300">
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-purple-500 rounded-[2rem] blur opacity-20 group-hover:opacity-40 transition-opacity"></div>
             <img
               src={profilePic || "/default-avatar.png"}
               alt="avatar"
-              className="w-16 h-16 rounded-2xl object-cover border-2 border-white dark:border-neutral-700 shadow-md"
+              className="w-20 h-20 rounded-[2rem] object-cover border-4 border-white dark:border-neutral-800 shadow-lg relative z-10"
             />
-            <div className="absolute -bottom-1 -right-1 bg-green-500 w-4 h-4 rounded-full border-2 border-white dark:border-neutral-900"></div>
+            <div className="absolute -bottom-1 -right-1 bg-green-500 w-6 h-6 rounded-full border-4 border-white dark:border-neutral-800 z-20 animate-pulse"></div>
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-              {getGreeting()}, {name}! 👋
+            <h1 className="text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight">
+              {getGreeting()}, <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">{name}</span>! 👋
             </h1>
-            <p className="text-gray-500 dark:text-gray-400">
-              You have {pending.length} pending tasks today. Let's crush them!
+            <p className="text-gray-500 dark:text-gray-400 mt-1 font-medium">
+              You have <span className="text-blue-600 dark:text-blue-400 font-bold">{pending.length}</span> pending tasks. Let's make today count!
             </p>
           </div>
         </div>
 
-        <form onSubmit={handleQuickAdd} className="flex-1 max-w-md flex gap-2">
-          <input
-            type="text"
-            value={newTaskTitle}
-            onChange={(e) => setNewTaskTitle(e.target.value)}
-            placeholder="Quick add a task..."
-            className="flex-1 px-4 py-2 rounded-xl border border-gray-200 dark:border-neutral-700 bg-gray-50 dark:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-white"
-          />
-          <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition">
-            Add
-          </button>
-        </form>
+        <div className="flex items-center gap-4 relative z-10 w-full md:w-auto">
+          <form onSubmit={handleQuickAdd} className="flex-1 md:w-80 flex gap-2 bg-gray-50/50 dark:bg-neutral-800/50 p-2 rounded-[2rem] border border-gray-100 dark:border-neutral-700 focus-within:ring-2 focus-within:ring-blue-500/50 transition-all">
+            <input
+              type="text"
+              value={newTaskTitle}
+              onChange={(e) => setNewTaskTitle(e.target.value)}
+              placeholder="Quick add a task..."
+              className="flex-1 px-4 bg-transparent border-none focus:outline-none text-gray-900 dark:text-white placeholder-gray-400"
+            />
+            <button type="submit" className="px-6 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-[1.5rem] font-bold shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 hover:scale-105 transition-all active:scale-95">
+              Add
+            </button>
+          </form>
 
-        <div className="hidden md:flex items-center gap-3 bg-blue-50 dark:bg-blue-900/20 px-4 py-2 rounded-xl border border-blue-100 dark:border-blue-800">
-          <Trophy className="text-blue-600 dark:text-blue-400" />
-          <div>
-            <p className="text-xs text-blue-600 dark:text-blue-400 font-medium">Total Points</p>
-            <p className="text-xl font-bold text-blue-700 dark:text-blue-300">{points}</p>
+          <div className="hidden lg:flex items-center gap-3 bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-yellow-900/10 dark:to-orange-900/10 px-6 py-3 rounded-[2rem] border border-orange-100 dark:border-orange-900/20 shadow-sm">
+            <div className="p-2 bg-orange-100 dark:bg-orange-900/30 rounded-full text-orange-600 dark:text-orange-400">
+              <Trophy size={20} />
+            </div>
+            <div>
+              <p className="text-xs text-orange-600 dark:text-orange-400 font-bold uppercase tracking-wider">Points</p>
+              <p className="text-xl font-black text-orange-700 dark:text-orange-300">{points}</p>
+            </div>
           </div>
         </div>
       </motion.div>
 
-      {/* Stats Grid */}
-      <motion.div variants={item} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white dark:bg-neutral-900 p-5 rounded-2xl border border-gray-100 dark:border-neutral-800 shadow-sm hover:shadow-md transition-all hover:-translate-y-1">
-          <div className="flex justify-between items-start mb-4">
-            <div className="p-2 bg-purple-50 dark:bg-purple-900/20 rounded-lg text-purple-600 dark:text-purple-400">
-              <ListChecks size={20} />
+      {/* Stats Grid - Organic Cards */}
+      <motion.div variants={item} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {[
+          { icon: <ListChecks size={24} />, label: "Total Tasks", value: pending.length, color: "purple" },
+          { icon: <AlertCircle size={24} />, label: "High Priority", value: highPriority.length, color: "red" },
+          { icon: <Clock size={24} />, label: "Due Soon", value: dueSoon.length, color: "orange" },
+          { icon: <TrendingUp size={24} />, label: "Completed", value: chartData.reduce((acc, curr) => acc + curr.completed, 0), color: "green" }
+        ].map((stat, i) => (
+          <div key={i} className="bg-white/80 dark:bg-neutral-900/80 backdrop-blur-xl p-6 rounded-[2.5rem] border border-white/20 dark:border-neutral-800 shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group">
+            <div className="flex justify-between items-start mb-4">
+              <div className={`p-4 rounded-[1.5rem] bg-${stat.color}-50 dark:bg-${stat.color}-900/20 text-${stat.color}-600 dark:text-${stat.color}-400 group-hover:scale-110 transition-transform`}>
+                {stat.icon}
+              </div>
+              <span className="px-3 py-1 bg-gray-100 dark:bg-neutral-800 rounded-full text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                {stat.label}
+              </span>
             </div>
-            <span className="text-xs font-medium px-2 py-1 bg-gray-100 dark:bg-neutral-800 rounded-full text-gray-600 dark:text-gray-400">Total</span>
+            <h3 className="text-4xl font-black text-gray-900 dark:text-white mb-1">{stat.value}</h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">Updated just now</p>
           </div>
-          <h3 className="text-2xl font-bold text-gray-900 dark:text-white">{pending.length}</h3>
-          <p className="text-sm text-gray-500 dark:text-gray-400">Pending Tasks</p>
-        </div>
-
-        <div className="bg-white dark:bg-neutral-900 p-5 rounded-2xl border border-gray-100 dark:border-neutral-800 shadow-sm hover:shadow-md transition-all hover:-translate-y-1">
-          <div className="flex justify-between items-start mb-4">
-            <div className="p-2 bg-red-50 dark:bg-red-900/20 rounded-lg text-red-600 dark:text-red-400">
-              <AlertCircle size={20} />
-            </div>
-            <span className="text-xs font-medium px-2 py-1 bg-gray-100 dark:bg-neutral-800 rounded-full text-gray-600 dark:text-gray-400">Urgent</span>
-          </div>
-          <h3 className="text-2xl font-bold text-gray-900 dark:text-white">{highPriority.length}</h3>
-          <p className="text-sm text-gray-500 dark:text-gray-400">High Priority</p>
-        </div>
-
-        <div className="bg-white dark:bg-neutral-900 p-5 rounded-2xl border border-gray-100 dark:border-neutral-800 shadow-sm hover:shadow-md transition-all hover:-translate-y-1">
-          <div className="flex justify-between items-start mb-4">
-            <div className="p-2 bg-orange-50 dark:bg-orange-900/20 rounded-lg text-orange-600 dark:text-orange-400">
-              <Clock size={20} />
-            </div>
-            <span className="text-xs font-medium px-2 py-1 bg-gray-100 dark:bg-neutral-800 rounded-full text-gray-600 dark:text-gray-400">Due Soon</span>
-          </div>
-          <h3 className="text-2xl font-bold text-gray-900 dark:text-white">{dueSoon.length}</h3>
-          <p className="text-sm text-gray-500 dark:text-gray-400">Due within 24h</p>
-        </div>
-
-        <div className="bg-white dark:bg-neutral-900 p-5 rounded-2xl border border-gray-100 dark:border-neutral-800 shadow-sm hover:shadow-md transition-all hover:-translate-y-1">
-          <div className="flex justify-between items-start mb-4">
-            <div className="p-2 bg-green-50 dark:bg-green-900/20 rounded-lg text-green-600 dark:text-green-400">
-              <TrendingUp size={20} />
-            </div>
-            <span className="text-xs font-medium px-2 py-1 bg-gray-100 dark:bg-neutral-800 rounded-full text-gray-600 dark:text-gray-400">Weekly</span>
-          </div>
-          <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
-            {chartData.reduce((acc, curr) => acc + curr.completed, 0)}
-          </h3>
-          <p className="text-sm text-gray-500 dark:text-gray-400">Completed this week</p>
-        </div>
+        ))}
       </motion.div>
 
-      {/* Main Grid: Chart, Calendar, News, AI */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Left Column: Chart & Quote */}
-        <motion.div variants={item} className="lg:col-span-2 space-y-4 flex flex-col">
-          {/* Activity Chart */}
-          <div className="bg-white dark:bg-neutral-900 p-6 rounded-3xl border border-gray-100 dark:border-neutral-800 shadow-sm flex-1">
-            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
-              <TrendingUp size={20} className="text-blue-500" />
-              Productivity Trend
-            </h3>
-            <div className="flex-1 min-h-[300px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={chartData}>
-                  <defs>
-                    <linearGradient id="colorCompleted" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="#3B82F6" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
-                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#9CA3AF' }} />
-                  <YAxis axisLine={false} tickLine={false} tick={{ fill: '#9CA3AF' }} />
-                  <Tooltip
-                    contentStyle={{ backgroundColor: '#fff', borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                    cursor={{ stroke: '#3B82F6', strokeWidth: 2 }}
-                  />
-                  <Area type="monotone" dataKey="completed" stroke="#3B82F6" strokeWidth={3} fillOpacity={1} fill="url(#colorCompleted)" />
-                </AreaChart>
-              </ResponsiveContainer>
+      {/* Main Bento Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* Top Row: Chart (8) & Calendar (4) */}
+        <motion.div variants={item} className="lg:col-span-8 flex flex-col gap-6">
+          <React.Suspense fallback={<div className="h-[400px] bg-gray-100 dark:bg-neutral-800 rounded-tl-[3rem] rounded-br-[3rem] rounded-tr-[1.5rem] rounded-bl-[1.5rem] animate-pulse"></div>}>
+            <div className="rounded-tl-[3rem] rounded-br-[3rem] rounded-tr-[1.5rem] rounded-bl-[1.5rem] overflow-hidden shadow-xl">
+              <ChartWidget data={chartData} />
             </div>
-          </div>
+          </React.Suspense>
 
-          {/* Daily Quote */}
-          <div className="bg-gradient-to-r from-indigo-500 to-purple-600 p-6 rounded-3xl shadow-lg text-white relative overflow-hidden">
-            <Quote className="absolute top-4 right-4 text-white/20" size={48} />
-            <p className="text-lg font-medium italic mb-2 relative z-10">"{quote.text}"</p>
-            <p className="text-sm text-white/80 relative z-10">— {quote.author}</p>
+          <div className="bg-gradient-to-r from-indigo-600 to-purple-600 p-8 rounded-tr-[3rem] rounded-bl-[3rem] rounded-tl-[1.5rem] rounded-br-[1.5rem] shadow-2xl text-white relative overflow-hidden group">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:scale-110 transition-transform duration-700"></div>
+            <Quote className="absolute top-8 right-8 text-white/20" size={64} />
+            <div className="relative z-10">
+              <p className="text-2xl font-medium italic mb-4 leading-relaxed">"{quote.text}"</p>
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-1 bg-white/30 rounded-full"></div>
+                <p className="text-lg font-bold text-white/90">{quote.author}</p>
+              </div>
+            </div>
           </div>
         </motion.div>
 
-        {/* Right Column: Calendar & News */}
-        <motion.div variants={item} className="space-y-4 flex flex-col">
-          {/* Calendar Widget */}
-          <div className="flex-1">
+        <motion.div variants={item} className="lg:col-span-4 flex flex-col gap-6">
+          <div className="bg-white/80 dark:bg-neutral-900/80 backdrop-blur-xl rounded-bl-[3rem] rounded-tr-[3rem] rounded-tl-[1.5rem] rounded-br-[1.5rem] border border-white/20 dark:border-neutral-800 shadow-xl overflow-hidden h-full">
             <CalendarWidget tasks={tasks} />
           </div>
+        </motion.div>
 
-          {/* AI Assistant - NEW */}
-          <div className="flex-1 min-h-[300px]">
+        {/* Bottom Row: AI Assistant (6) & Tech News (6) */}
+        <motion.div variants={item} className="lg:col-span-6">
+          <div className="bg-white/80 dark:bg-neutral-900/80 backdrop-blur-xl rounded-tr-[3rem] rounded-bl-[3rem] rounded-tl-[2rem] rounded-br-[2rem] border border-white/20 dark:border-neutral-800 shadow-xl overflow-hidden min-h-[400px] h-full">
             <AiAssistant />
           </div>
+        </motion.div>
 
-          {/* Tech News */}
-          <div className="bg-white dark:bg-neutral-900 p-6 rounded-3xl border border-gray-100 dark:border-neutral-800 shadow-sm flex-1 flex flex-col">
-            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+        <motion.div variants={item} className="lg:col-span-6">
+          <div className="bg-white/80 dark:bg-neutral-900/80 backdrop-blur-xl p-6 rounded-tl-[3rem] rounded-br-[3rem] rounded-tr-[2rem] rounded-bl-[2rem] border border-white/20 dark:border-neutral-800 shadow-xl flex flex-col h-full min-h-[400px]">
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2 px-2">
               <Newspaper size={20} className="text-purple-500" />
               Tech News
             </h3>
-            <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar min-h-[250px]">
+            <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
               <TechNews />
             </div>
           </div>
         </motion.div>
       </div>
 
-      <footer className="mt-12 text-center text-sm text-gray-500 dark:text-gray-400 py-6 border-t border-gray-100 dark:border-neutral-800">
-        <p>© 2024 Smart Productivity Tracker. Crafted with ❤️ by <span className="font-semibold text-gray-900 dark:text-white">Madhan Singh</span></p>
+      <footer className="mt-12 text-center py-8 border-t border-gray-100 dark:border-neutral-800">
+        <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center justify-center gap-2">
+          © 2024 Smart Productivity Tracker <span className="w-1 h-1 bg-gray-300 rounded-full"></span> Crafted with <span className="text-red-500 animate-pulse">❤️</span> by <span className="font-bold text-gray-900 dark:text-white">Madhan Singh</span>
+        </p>
       </footer>
     </motion.div>
   );

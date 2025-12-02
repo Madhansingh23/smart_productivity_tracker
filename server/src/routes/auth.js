@@ -74,6 +74,31 @@ router.post('/login', async (req, res) => {
   }
 });
 
+// --- Guest Login ---
+router.post('/guest', async (req, res) => {
+  try {
+    const suffix = Math.floor(Math.random() * 100000);
+    const username = `guest_${suffix}`;
+    const email = `guest_${suffix}@example.com`;
+    const password = `guest_${suffix}`;
+    const hashed = await bcrypt.hash(password, 10);
+    const user = new User({
+      firstName: 'Guest',
+      lastName: 'User',
+      username,
+      email,
+      password: hashed,
+      isGuest: true
+    });
+    await user.save();
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET || 'secret', { expiresIn: '1d' });
+    res.json({ token, user: safeUser(user) });
+  } catch (err) {
+    console.error("Guest login error:", err);
+    res.status(500).json({ error: 'Failed to create guest session' });
+  }
+});
+
 // --- Availability checks (username/email/phone) ---
 router.get('/check-username', async (req, res) => {
   const username = String(req.query.username || '').toLowerCase().trim();

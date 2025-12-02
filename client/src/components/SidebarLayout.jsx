@@ -29,7 +29,7 @@ export default function SidebarLayout({ children }) {
   const [historyCount, setHistoryCount] = useState(0);
 
   const menuItems = [
-    { to: "/", icon: <LayoutDashboard size={20} />, label: "Dashboard" },
+    { to: "/dashboard", icon: <LayoutDashboard size={20} />, label: "Dashboard" },
     { to: "/tasks", icon: <CheckSquare size={20} />, label: "Tasks" },
     { to: "/leaderboard", icon: <Trophy size={20} />, label: "Leaderboard" },
     { to: "/pomodoro", icon: <Timer size={20} />, label: "Pomodoro" },

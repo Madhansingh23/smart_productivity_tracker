@@ -8,6 +8,8 @@ import { AnimatePresence } from 'framer-motion';
 import PageWrapper from './components/PageWrapper.jsx';
 
 // Lazy load components
+const LandingPage = lazy(() => import('./pages/LandingPage.jsx'));
+
 const SidebarLayout = lazy(() => import('./components/SidebarLayout.jsx'));
 const Login = lazy(() => import('./pages/Login.jsx'));
 const Signup = lazy(() => import('./pages/Signup.jsx'));
@@ -33,10 +35,13 @@ function PrivateRoute({ children }) {
 
 function AnimatedRoutes() {
   const location = useLocation();
+  const { user } = useAuth();
 
   return (
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
+        {/* Public Routes */}
+        <Route path="/" element={user ? <Navigate to="/dashboard" replace /> : <PageWrapper><LandingPage /></PageWrapper>} />
         <Route path="/login" element={<PageWrapper><Login /></PageWrapper>} />
         <Route path="/signup" element={<PageWrapper><Signup /></PageWrapper>} />
 
@@ -47,7 +52,7 @@ function AnimatedRoutes() {
             <PrivateRoute>
               <SidebarLayout>
                 <Routes location={location} key={location.pathname}>
-                  <Route path="/" element={<PageWrapper><Dashboard /></PageWrapper>} />
+                  <Route path="/dashboard" element={<PageWrapper><Dashboard /></PageWrapper>} />
                   <Route path="/tasks" element={<PageWrapper><TasksPage /></PageWrapper>} />
                   <Route path="/rules" element={<PageWrapper><RulesPage /></PageWrapper>} />
                   <Route path="/leaderboard" element={<PageWrapper><LeaderboardPage /></PageWrapper>} />
@@ -59,7 +64,7 @@ function AnimatedRoutes() {
                   <Route path="/profile/:username" element={<PageWrapper><ProfilePage /></PageWrapper>} />
                   <Route path="/contact" element={<PageWrapper><Contact /></PageWrapper>} />
                   <Route path="/snake" element={<PageWrapper><Snake /></PageWrapper>} />
-                  <Route path="*" element={<Navigate to="/" replace />} />
+                  <Route path="*" element={<Navigate to="/dashboard" replace />} />
                 </Routes>
               </SidebarLayout>
             </PrivateRoute>
